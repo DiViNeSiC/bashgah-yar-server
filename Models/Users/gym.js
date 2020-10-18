@@ -1,4 +1,7 @@
 const mongoose = require('mongoose')
+const path = require('path')
+
+const gymImageBasePath = 'Uploads/GymImages'
 
 const gymSchema = new mongoose.Schema({
     admin: {
@@ -52,4 +55,13 @@ const gymSchema = new mongoose.Schema({
     }
 })
 
+gymSchema.pre('save', function() {
+    if (this.gymImageNames != null && this.admin != null) {
+        return this.gymImagePaths = this.gymImageNames.map(name => 
+            path.join('/', gymImageBasePath, name)
+        )
+    }
+})
+
 module.exports = mongoose.model('Gym', gymSchema)
+module.exports.gymImageBasePath = gymImageBasePath

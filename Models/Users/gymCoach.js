@@ -1,5 +1,8 @@
 const mongoose = require('mongoose')
+const path = require('path')
 const { GYM_COACH_ROLE } = require('../../Handlers/Constants/roles')
+
+const avatarImageBasePath = 'Uploads/GymCoachAvatars'
 
 const gymCoachSchema = new mongoose.Schema({
     username: {
@@ -55,4 +58,14 @@ const gymCoachSchema = new mongoose.Schema({
     avatarImagePath: String
 })
 
+gymCoachSchema.pre('save', function() {
+    if (this.avatarName !== '' && this.avatarName != null) {
+        return (
+            this.avatarImagePath = 
+                path.join('/', avatarImageBasePath, this.avatarName)
+        )
+    }
+})
+
 module.exports = mongoose.model('GymCoach', gymCoachSchema)
+module.exports.avatarImageBasePath = avatarImageBasePath
