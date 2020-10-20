@@ -6,6 +6,10 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
+const managerRegistersRouter = require('./Routes/Register/managerRegisters')
+const gymAdminRegistersRouter = require('./Routes/Register/gymAdminRegisters')
+const siteAdminRegistersRouter = require('./Routes/Register/siteAdminRegisters')
+
 const app = express()
 
 mongoose.connect(process.env.DATABASE_URI, { 
@@ -24,6 +28,10 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use(express.static('./Public'))
+
+app.use('/register/site-admin', siteAdminRegistersRouter)
+app.use('/register/gym-admin', gymAdminRegistersRouter)
+app.use('/register/manager', managerRegistersRouter)
 
 const port = process.env.PORT || 5000
 
