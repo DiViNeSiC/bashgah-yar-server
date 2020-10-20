@@ -8,7 +8,7 @@ module.exports = async (username, email) => {
     let error = null
 
     const athletes = await Athlete.find()
-    const gymCoaches = await GymCoach.find()
+    cosnst gymCoaches = await GymCoach.find()
     const gymAdmins = await GymAdmin.find()
     const gymManagers = await GymManager.find()
     const siteAdmins = await SiteAdmin.find()

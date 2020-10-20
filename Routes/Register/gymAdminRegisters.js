@@ -8,4 +8,4 @@ const {
 router.post('/manager', catchErrors(managerRegister))
 router.post('/gym', catchErrors(gymRegister))
 
-module.exports = router
+module.exports = routers

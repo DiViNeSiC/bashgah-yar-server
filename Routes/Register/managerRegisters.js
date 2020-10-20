@@ -8,4 +8,4 @@ const {
 router.post('/coach', catchErrors(coachRegister))
 router.post('/athlete', catchErrors(athleteRegister))
 
-module.exports = router
+module.exports = routers

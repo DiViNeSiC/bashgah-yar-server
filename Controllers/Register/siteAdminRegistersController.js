@@ -28,7 +28,7 @@ const gymAdminRegister = async (req, res) => {
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
-
+s
     const newGymAdmin = new GymAdmin({
         username,
         name,

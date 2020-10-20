@@ -32,7 +32,7 @@ app.use(express.static('./Public'))
 app.use('/register/site-admin', siteAdminRegistersRouter)
 app.use('/register/gym-admin', gymAdminRegistersRouter)
 app.use('/register/manager', managerRegistersRouter)
-
+s
 const port = process.env.PORT || 5000
 
 app.listen(port, () => console.log(`APP RUNNING ON ${port}`))
