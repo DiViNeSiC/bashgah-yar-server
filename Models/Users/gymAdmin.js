@@ -7,26 +7,25 @@ const avatarImageBasePath = 'Uploads/GymAdminAvatars'
 const gymAdminSchema = new mongoose.Schema({
     username: {
         type: String,
-        minlength: 4,
+        minlength: 6,
         required: 'Username Is Required'
     },
     name: {
         type: String,
-        minlength: 3,
         required: 'Name Is Required'
     },
     lastname: {
         type: String,
-        minlength: 3,
         required: 'Lastname Is Required'
     },
     email: {
         type: String,
-        minlength: 6,
+        minlength: 5,
         required: 'Email Is Required'
     },
     password: {
         type: String,
+        minlength: 8,
         required: 'Password Is Required'
     },
     phoneNumber: {

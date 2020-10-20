@@ -9,27 +9,25 @@ const gymSchema = new mongoose.Schema({
         ref: 'GymAdmin',
         required: true
     },
-    managers: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'GymManager'
-        }
-    ],
-    coaches: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'GymCoach'
-        }
-    ],
-    athletes: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Athlete'
-        }
-    ],
-    entryPassword: {
+    managers: {
+        type: Array,
+        default: []
+    },
+    coaches: {
+        type: Array,
+        default: []
+    },
+    athletes: {
+        type: Array,
+        default: []
+    },
+    name: {
         type: String,
-        required: true
+        required: 'Name Is Required'
+    },
+    city: {
+        type: Number,
+        required: 'City Is Required'
     },
     address: {
         type: String,
@@ -42,6 +40,11 @@ const gymSchema = new mongoose.Schema({
     phoneNumber: {
         type: String,
         required: 'Phone Number Is Required'
+    },
+    entryPassword: {
+        type: String,
+        minlength: 8,
+        required: true
     },
     gymImageNames: {
         type: Array,

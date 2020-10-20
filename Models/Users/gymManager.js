@@ -7,26 +7,20 @@ const avatarImageBasePath = 'Uploads/GymManagerAvatars'
 const gymManagerSchema = new mongoose.Schema({
     username: {
         type: String,
-        minlength: 4,
+        minlength: 6,
         required: 'Username Is Required'
     },
     name: {
         type: String,
-        minlength: 3,
         required: 'Name Is Required'
     },
     lastname: {
         type: String,
-        minlength: 3,
         required: 'Lastname Is Required'
-    },
-    email: {
-        type: String,
-        minlength: 6,
-        required: 'Email Is Required'
     },
     password: {
         type: String,
+        minlength: 8,
         required: 'Password Is Required'
     },
     phoneNumber: {
@@ -54,6 +48,7 @@ const gymManagerSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Gym'
     },
+    email: String,
     avatarName: String,
     avatarImagePath: String
 })

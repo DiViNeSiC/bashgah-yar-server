@@ -1,4 +1,4 @@
-module.exports = (username, name, lastname, email, password, phoneNumber) => {
+module.exports = (username, name, lastname, email, password, phoneNumber, emailChecking) => {
     let error = null
 
     if (!username) 
@@ -22,8 +22,13 @@ module.exports = (username, name, lastname, email, password, phoneNumber) => {
     if (password.length < 8) 
         return error = 'رمز عبور باید شامل هشت کاراکتر باشد' 
 
-    if (email.length < 5) 
-        return error = 'ایمیل باید شامل پنج کاراکتر باشد' 
+    if (emailChecking) {
+        if (!email) 
+            return error = 'ایمیل نیاز است' 
+        
+        if (email.length < 5) 
+            return error = 'ایمیل باید شامل پنج کاراکتر باشد' 
+    }
 
     return error
 }
