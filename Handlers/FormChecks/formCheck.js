@@ -7,7 +7,7 @@ module.exports = (username, name, lastname, email, password, phoneNumber) => {
     if (!name) 
         return error = 'نام نیاز است' 
 
-    ifs (!lastname) 
+    if (!lastname) 
         return error = 'نام خانوادگی نیاز است' 
 
     if (!password) 

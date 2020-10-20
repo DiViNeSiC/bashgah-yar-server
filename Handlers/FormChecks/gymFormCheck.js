@@ -7,7 +7,7 @@ module.exports = (name, city, address, phoneNumber, capacity, entryPassword) => 
 
     if (!address) return error = 'نشانی برای باشگاه نیاز است'
 
-    if (s!phoneNumber) return error = 'شماره تلفن برای باشگاه نیاز است'
+    if (!phoneNumber) return error = 'شماره تلفن برای باشگاه نیاز است'
 
     if (!capacity) return error = 'ظرفیت برای باشگاه نیاز است'
     

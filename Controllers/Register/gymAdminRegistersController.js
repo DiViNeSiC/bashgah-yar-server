@@ -24,7 +24,7 @@ const gymRegister = async (req, res) => {
         phoneNumber, capacity, 
         entryPassword
     )
-s
+
     if (formError) throw formError
 
     const hashedPassword = await bcrypt.hash(entryPassword, 10)

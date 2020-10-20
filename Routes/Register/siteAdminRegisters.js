@@ -6,4 +6,4 @@ const {
 
 router.post('/gym-admin', catchErrors(gymAdminRegister))
 
-module.exports = routers
+module.exports = router

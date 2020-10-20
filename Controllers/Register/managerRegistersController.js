@@ -5,7 +5,7 @@ const Gym = require('../../Models/Users/gym')
 const formCheck = require('../../Handlers/FormChecks/formCheck')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
 const { GYM_COACH_ROLE, ATHLETE_ROLE } = require('../../Handlers/Constants/roles')
-s
+
 const coachRegister = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : ''
     const {
