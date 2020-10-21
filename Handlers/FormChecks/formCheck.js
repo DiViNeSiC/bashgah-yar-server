@@ -1,4 +1,9 @@
-module.exports = (username, name, lastname, email, password, phoneNumber, emailChecking) => {
+module.exports = (
+    username, name, 
+    lastname, email, 
+    password, phoneNumber, 
+    emailChecking = false
+) => {
     let error = null
 
     if (!username) 

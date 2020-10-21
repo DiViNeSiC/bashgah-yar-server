@@ -67,7 +67,7 @@ const managerRegister = async (req, res) => {
     const formError = formCheck(
         username, name, 
         lastname, email, 
-        password, phoneNumber
+        password, phoneNumber, true
     )
 
     if (formError) throw formError

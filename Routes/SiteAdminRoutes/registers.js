@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { catchErrors } = require('../Handlers/errorHandler')
+const { catchErrors } = require('../../Handlers/errorHandler')
 const {  
     gymAdminRegister
 } = require('../../Controllers/Register/siteAdminRegistersController')
