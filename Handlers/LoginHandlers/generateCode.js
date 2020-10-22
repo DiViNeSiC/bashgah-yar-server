@@ -1,4 +1,4 @@
-module.exports = (loginTokenExpireTime) => {
+module.exports = () => {
     const digits = [
         '1', '2', '3', '4', '5', '6', '7', '8', '9', 
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 
@@ -13,5 +13,5 @@ module.exports = (loginTokenExpireTime) => {
         code += digits[randomDigit]
     }
 
-    return `${code}${loginTokenExpireTime}`
+    return code
 }

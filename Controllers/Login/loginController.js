@@ -5,7 +5,7 @@ const findUser = require('../../Handlers/LoginHandlers/findUser')
 const generateCode = require('../../Handlers/LoginHandlers/generateCode')
 
 const regularLogin = async (req, res) => {
-    const { credential, password, tokenExpireTime } = req.body
+    const { credential, password } = req.body
 
     const user = await findUser(credential)
 
@@ -15,7 +15,7 @@ const regularLogin = async (req, res) => {
 
     if (!passed) throw 'رمز عبور شما اشتباه است'
 
-    const twoStepCode = generateCode(tokenExpireTime)
+    const twoStepCode = generateCode()
     
     await user.updateOne({ twoStepCode })
 
@@ -25,13 +25,12 @@ const regularLogin = async (req, res) => {
 }
 
 const confirmTwoStepCode = async (req, res) => {
-    const { twoStepCode } = req.body
+    const { twoStepCode, expiresIn } = req.body
     const user = await User.findOne({ twoStepCode })
     
     if (!user) 
         throw 'کد تایید اشتباه یا مدت زمان استفاده از آن به پایان رسیده است'
     
-    const expiresIn = twoStepCode.slice(6)
     const entryToken = await jwt.sign(user, process.env.JWT_ENTRY_SECRET, { expiresIn })
 
     res.json({ entryToken })
