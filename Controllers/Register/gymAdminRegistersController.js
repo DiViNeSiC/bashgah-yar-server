@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const Gym = require('../../Models/gym')
-const User = require('../../Models/user')
+const User = require('../../Models/User')
 const formCheck = require('../../Handlers/FormChecks/formCheck')
 const gymFormCheck = require('../../Handlers/FormChecks/gymFormCheck')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
@@ -69,7 +69,7 @@ const managerRegister = async (req, res) => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email, phoneNumber)
+    const userExist = await userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 

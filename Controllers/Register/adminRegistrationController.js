@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const User = require('../../Models/user')
+const User = require('../../Models/User')
 const formCheck = require('../../Handlers/FormChecks/formCheck')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
 const { SITE_ADMIN_ROLE } = require('../../Handlers/Constants/roles')
@@ -12,12 +12,13 @@ const adminRegistration = async (req, res) => {
         lastname,
         email,
         password,
+        siteRegistrationPassword,
         phoneNumber
     } = req.body
 
     const passwordPassed = await bcrypt
         .compare(
-            password, 
+            siteRegistrationPassword, 
             process.env.ADMIN_REGISTRATION_PASSWORD
         )
 
@@ -31,7 +32,7 @@ const adminRegistration = async (req, res) => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email, phoneNumber)
+    const userExist = await userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 

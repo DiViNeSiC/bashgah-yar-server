@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema({
     avatarImagePath: String
 })
 
-gymAdminSchema.pre('save', function() {
+userSchema.pre('save', function() {
     if (this.avatarName !== '' && this.avatarName != null) {
         return (
             this.avatarImagePath = 

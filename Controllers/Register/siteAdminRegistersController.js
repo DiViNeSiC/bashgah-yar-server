@@ -23,7 +23,7 @@ const gymAdminRegister = async (req, res) => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email, phoneNumber)
+    const userExist = await userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 

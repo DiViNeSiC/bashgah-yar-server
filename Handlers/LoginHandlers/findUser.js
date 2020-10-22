@@ -1,7 +1,9 @@
 const User = require('../../Models/User')
 
 module.exports = async (credential) => {
-    const userMainInfo = credential?.toLowerCase()
+    if (!credential) return null
+
+    const userMainInfo = credential.toLowerCase()
 
     const allUsers = await User.find()
 

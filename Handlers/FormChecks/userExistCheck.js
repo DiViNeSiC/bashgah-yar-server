@@ -18,9 +18,11 @@ module.exports = async (username, email, phoneNumber) => {
     if (phoneNumberExist) 
         return error = 'کاربری دیگر با این شماره تلفن وجود دارد'
 
-    const emailExist = allUsers.some(user => 
-        user.email === email?.toLowerCase()
-    )
+    const emailExist = allUsers.some(user => {
+        if (!email) return false
+
+        return user.email === email.toLowerCase()
+    })
 
     if (emailExist) 
         return error = 'کاربری دیگر با این ایمیل وجود دارد'
