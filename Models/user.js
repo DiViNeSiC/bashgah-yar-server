@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema({
         data: String,
         default: ''
     },
+    twoStepCode: {
+        type: String,
+        expires: '1m',
+        default: ''
+    },
     refreshToken: {
         data: String,
         default: ''

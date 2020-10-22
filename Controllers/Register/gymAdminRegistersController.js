@@ -15,19 +15,15 @@ const gymRegister = async (req, res) => {
         city,
         address,
         capacity,
-        phoneNumber,
-        entryPassword
+        phoneNumber
     } = req.body
 
     const formError = gymFormCheck(
         name, city, address, 
-        phoneNumber, capacity, 
-        entryPassword
+        phoneNumber, capacity
     )
 
     if (formError) throw formError
-
-    const hashedPassword = await bcrypt.hash(entryPassword, 10)
 
     const newGym = new Gym({
         name,
@@ -35,8 +31,7 @@ const gymRegister = async (req, res) => {
         address,
         capacity,
         phoneNumber,
-        gymImageNames,
-        entryPassword: hashedPassword
+        gymImageNames
     })
 
     try {

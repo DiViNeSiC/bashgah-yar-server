@@ -47,11 +47,6 @@ const gymSchema = new mongoose.Schema({
         type: String,
         required: 'Phone Number Is Required'
     },
-    entryPassword: {
-        type: String,
-        minlength: 8,
-        required: true
-    },
     gymImageNames: {
         type: Array,
         maxlength: 12,

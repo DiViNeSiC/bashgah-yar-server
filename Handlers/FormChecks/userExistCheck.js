@@ -8,20 +8,20 @@ module.exports = async (username, email, phoneNumber) => {
         user.username === username.toLowerCase()
     )
 
+    if (usernameExist) 
+        return error = 'کاربری دیگر با این نام کاربری وجود دارد'
+
     const phoneNumberExist = allUsers.some(user => 
         user.phoneNumber === phoneNumber
     )
+
+    if (phoneNumberExist) 
+        return error = 'کاربری دیگر با این شماره تلفن وجود دارد'
 
     const emailExist = allUsers.some(user => 
         user.email === email?.toLowerCase()
     )
 
-    if (usernameExist) 
-        return error = 'کاربری دیگر با این نام کاربری وجود دارد'
-
-    if (phoneNumberExist) 
-        return error = 'کاربری دیگر با این شماره تلفن وجود دارد'
-        
     if (emailExist) 
         return error = 'کاربری دیگر با این ایمیل وجود دارد'
 

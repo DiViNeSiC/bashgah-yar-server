@@ -1,7 +1,8 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const User = require('../../Models/User')
 const findUser = require('../../Handlers/LoginHandlers/findUser')
-const { ATHLETE_ROLE } = require('../../Handlers/Constants/roles')
+const generateCode = require('../../Handlers/LoginHandlers/generateCode')
 
 const regularLogin = async (req, res) => {
     const { credential, password, tokenExpireTime } = req.body
@@ -14,25 +15,26 @@ const regularLogin = async (req, res) => {
 
     if (!passed) throw 'رمز عبور شما اشتباه است'
 
-    if (user.role !== ATHLETE_ROLE) 
-        return res.json({ user })
+    const twoStepCode = generateCode(tokenExpireTime)
+    
+    await user.updateOne({ twoStepCode })
 
-    const entryToken = await jwt
-        .sign(
-            user, 
-            process.env.JWT_ENTRY_SECRET, 
-            { expiresIn: tokenExpireTime }
-        )
+    // SEND CODE TO THE USER'S PHONE NUMBER
 
-    res.json({ user, entryToken })
+    res.json({ message: 'کد ورودی به شماره تلفن شما ارسال شد' })
 }
 
-const confirmSiteAdminPassword = async (req, res) => {}
+const confirmTwoStepCode = async (req, res) => {
+    const { twoStepCode } = req.body
+    const user = await User.findOne({ twoStepCode })
+    
+    if (!user) 
+        throw 'کد تایید اشتباه یا مدت زمان استفاده از آن به پایان رسیده است'
+    
+    const expiresIn = twoStepCode.slice(6)
+    const entryToken = await jwt.sign(user, process.env.JWT_ENTRY_SECRET, { expiresIn })
 
-const confirmGymPassword = async (req, res) => {}
-
-module.exports = { 
-    regularLogin, 
-    confirmSiteAdminPassword, 
-    confirmGymPassword
+    res.json({ entryToken })
 }
+
+module.exports = { regularLogin, confirmTwoStepCode }
