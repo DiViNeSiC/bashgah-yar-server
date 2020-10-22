@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt')
-const Athlete = require('../../Models/Users/athlete')
-const Coach = require('../../Models/Users/gymCoach')
-const Gym = require('../../Models/Users/gym')
+const User = require('../../Models/user')
+const Gym = require('../../Models/gym')
 const formCheck = require('../../Handlers/FormChecks/formCheck')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
 const { GYM_COACH_ROLE, ATHLETE_ROLE } = require('../../Handlers/Constants/roles')
@@ -25,13 +24,13 @@ const coachRegister = async (req, res) => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email)
+    const userExist = userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const newCoach = new Coach({
+    const newCoach = new User({
         username,
         name,
         lastname,
@@ -43,13 +42,10 @@ const coachRegister = async (req, res) => {
         role: GYM_COACH_ROLE
     })
 
-    const gym = await Gym.findById(req.payload.gym) 
-    const gymCoaches = gym.coaches
-    const newList = [...gymCoaches, newCoach.username]
+    //FIX ADDING USER ID TO THE SPECIFIC GYM
 
     try {
         await newCoach.save()
-        await gym.updateOne({ coaches: newList })
 
         res.json({
             message: `ثبت شد ${username} مربی جدید با نام کاربری`
@@ -80,13 +76,13 @@ const athleteRegister = async (req, res) => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email)
+    const userExist = userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const newAthlete = new Athlete({
+    const newAthlete = new User({
         username,
         name,
         lastname,
@@ -98,13 +94,10 @@ const athleteRegister = async (req, res) => {
         role: ATHLETE_ROLE
     })
 
-    const gym = await Gym.findById(req.payload.gym) 
-    const gymAthletes = gym.athletes
-    const newList = [...gymAthletes, newAthlete.username]
+    //FIX ADDING USER ID TO THE SPECIFIC GYM
 
     try {
         await newAthlete.save()
-        await gym.updateOne({ athletes: newList })
 
         res.json({
             message: `ثبت شد ${username} ورزشکار جدید با نام کاربری`

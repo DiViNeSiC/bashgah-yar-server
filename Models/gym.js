@@ -6,21 +6,27 @@ const gymImageBasePath = 'Uploads/GymImages'
 const gymSchema = new mongoose.Schema({
     admin: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'GymAdmin',
+        ref: 'User',
         required: true
     },
-    managers: {
-        type: Array,
-        default: []
-    },
-    coaches: {
-        type: Array,
-        default: []
-    },
-    athletes: {
-        type: Array,
-        default: []
-    },
+    managers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
+    coaches: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
+    athletes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
     name: {
         type: String,
         required: 'Name Is Required'

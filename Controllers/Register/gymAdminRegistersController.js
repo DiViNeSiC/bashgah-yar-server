@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
-const Gym = require('../../Models/Users/gym')
-const Manager = require('../../Models/Users/gymManager')
+const Gym = require('../../Models/gym')
+const User = require('../../Models/user')
 const formCheck = require('../../Handlers/FormChecks/formCheck')
 const gymFormCheck = require('../../Handlers/FormChecks/gymFormCheck')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
@@ -42,6 +42,8 @@ const gymRegister = async (req, res) => {
     try {
         await newGym.save()
 
+        //FIX ADDING GYM ID TO THE GYM ADMIN "console.log(newGym)"
+
         res.json({
             message: `ثبت شد ${name} باشگاه جدید با نام `
         })
@@ -72,13 +74,13 @@ const managerRegister = async (req, res) => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email)
+    const userExist = userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const newManager = new Manager({
+    const newManager = new User({
         username,
         name,
         lastname,
@@ -90,13 +92,10 @@ const managerRegister = async (req, res) => {
         role: GYM_MANAGER_ROLE
     })
 
-    const gym = await Gym.findById(gymId) 
-    const gymManagers = gym.managers
-    const newList = [...gymManagers, newManager.username]
+    //FIX ADDING USER ID TO THE SPECIFIC GYM
 
     try {
         await newManager.save()
-        await gym.updateOne({ managers: newList })
 
         res.json({
             message: `ثبت شد ${username} مدیر باشگاه جدید با نام کاربری`

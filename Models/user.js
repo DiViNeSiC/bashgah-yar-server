@@ -1,35 +1,19 @@
 const mongoose = require('mongoose')
 const path = require('path')
-const { GYM_COACH_ROLE } = require('../../Handlers/Constants/roles')
 
-const avatarImageBasePath = 'Uploads/GymCoachAvatars'
+const avatarImageBasePath = 'Uploads/UserAvatars'
 
-const gymCoachSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     username: {
         type: String,
-        minlength: 6,
-        required: 'Username Is Required'
+        lowercase: true
     },
-    name: {
+    email: {
         type: String,
-        required: 'Name Is Required'
-    },
-    lastname: {
-        type: String,
-        required: 'Lastname Is Required'
-    },
-    password: {
-        type: String,
-        minlength: 8,
-        required: 'Password Is Required'
-    },
-    phoneNumber: {
-        type: String,
-        required: 'Phone Number Is Required'
+        lowercase: true
     },
     role: {
         type: String,
-        default: GYM_COACH_ROLE,
         required: true
     },
     entryToken: {
@@ -48,12 +32,21 @@ const gymCoachSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Gym'
     },
-    email: String,
+    adminGyms: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Gym'
+        }
+    ],
+    name: String,
+    lastname: String,
+    password: String,
+    phoneNumber: String,
     avatarName: String,
     avatarImagePath: String
 })
 
-gymCoachSchema.pre('save', function() {
+gymAdminSchema.pre('save', function() {
     if (this.avatarName !== '' && this.avatarName != null) {
         return (
             this.avatarImagePath = 
@@ -62,5 +55,5 @@ gymCoachSchema.pre('save', function() {
     }
 })
 
-module.exports = mongoose.model('GymCoach', gymCoachSchema)
+module.exports = mongoose.model('User', userSchema)
 module.exports.avatarImageBasePath = avatarImageBasePath

@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const GymAdmin = require('../../Models/Users/gymAdmin')
+const User = require('../../Models/User')
 const formCheck = require('../../Handlers/FormChecks/formCheck')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
 const { GYM_ADMIN_ROLE } = require('../../Handlers/Constants/roles')
@@ -23,13 +23,13 @@ const gymAdminRegister = async (req, res) => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email)
+    const userExist = userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const newGymAdmin = new GymAdmin({
+    const newGymAdmin = new User({
         username,
         name,
         lastname,

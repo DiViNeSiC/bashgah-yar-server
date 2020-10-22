@@ -1,10 +1,10 @@
 const bcrypt = require('bcrypt')
-const SiteAdmin = require('../../Models/Users/siteAdmin')
+const User = require('../../Models/user')
 const formCheck = require('../../Handlers/FormChecks/formCheck')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
 const { SITE_ADMIN_ROLE } = require('../../Handlers/Constants/roles')
 
-const adminRegistration = async () => {
+const adminRegistration = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : ''
     const {
         username,
@@ -15,13 +15,13 @@ const adminRegistration = async () => {
         phoneNumber
     } = req.body
 
-    const passwordPass = await bcrypt
+    const passwordPassed = await bcrypt
         .compare(
             password, 
             process.env.ADMIN_REGISTRATION_PASSWORD
         )
 
-    if (!passwordPass) throw '!رمز ورودی برای ثبت ادمین اشتباه است'
+    if (!passwordPassed) throw '!رمز ورودی برای ثبت ادمین اشتباه است'
 
     const formError = formCheck(
         username, name, 
@@ -31,13 +31,13 @@ const adminRegistration = async () => {
 
     if (formError) throw formError
 
-    const userExist = userExistCheck(username, email)
+    const userExist = userExistCheck(username, email, phoneNumber)
 
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const newSiteAdmin = new SiteAdmin({
+    const newSiteAdmin = new User({
         username,
         name,
         lastname,

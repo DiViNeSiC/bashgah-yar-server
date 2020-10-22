@@ -6,6 +6,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
+const loginRouter = require('./Routes/GlobalRoutes/login')
 const adminRegistrationRouter = require('./Routes/GlobalRoutes/adminRegistration')
 const siteAdminRouter = require('./Routes/MainRoutes/siteAdmin')
 const gymAdminRouter = require('./Routes/MainRoutes/gymAdmin')
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(express.static('./Public'))
 
+app.use('/login', loginRouter)
 app.use('/admin-registration', adminRegistrationRouter)
 app.use('/site-admin', siteAdminRouter)
 app.use('/gym-admin', gymAdminRouter)

@@ -13,6 +13,9 @@ module.exports = (name, city, address, phoneNumber, capacity, entryPassword) => 
     
     if (!entryPassword) return error = 'رمز ورودی برای باشگاه نیاز است'
 
+    if (name.length < 5) 
+        return error = 'نام باشگاه باید شامل هشت کاراکتر باشد' 
+
     if (entryPassword.length < 8) 
         return error = 'رمز ورودی باید شامل هشت کاراکتر باشد' 
 
