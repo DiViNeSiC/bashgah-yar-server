@@ -18,7 +18,7 @@ const gymRegister = async (req, res) => {
         phoneNumber
     } = req.body
 
-    const formError = gymFormCheck(
+    const formError = await gymFormCheck(
         name, city, address, 
         phoneNumber, capacity
     )
@@ -31,18 +31,23 @@ const gymRegister = async (req, res) => {
         address,
         capacity,
         phoneNumber,
-        gymImageNames
+        gymImageNames,
+        admin: req.payload._id
     })
 
     try {
         await newGym.save()
 
-        //FIX ADDING GYM ID TO THE GYM ADMIN "console.log(newGym)"
+        const admin = await User.findById(req.payload._id)
+        const { adminGyms } = admin
+        const newGyms = [...adminGyms, newGym.id]
+        
+        await admin.updateOne({ adminGyms: newGyms })
 
         res.json({
             message: `ثبت شد ${name} باشگاه جدید با نام `
         })
-    } catch {
+    } catch (err) {
         res.status(500).json({ 
             errorMessage: `ثبت باشگاه جدید موفقیت آمیز نبود`
         })
@@ -87,10 +92,15 @@ const managerRegister = async (req, res) => {
         role: GYM_MANAGER_ROLE
     })
 
-    //FIX ADDING USER ID TO THE SPECIFIC GYM
-
     try {
         await newManager.save()
+
+        const gym = await Gym.findById(gymId)
+        const { managers } = gym
+        const newManagers = [...managers, newManager.id]
+        
+        await gym.updateOne({ managers: newManagers })
+
 
         res.json({
             message: `ثبت شد ${username} مدیر باشگاه جدید با نام کاربری`

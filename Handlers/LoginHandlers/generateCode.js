@@ -9,7 +9,7 @@ module.exports = () => {
     let code = ''
 
     for(let i = 0; i < 6; i++) {
-        const randomDigit = Math.floor(Math.random() * 34)
+        const randomDigit = Math.floor(Math.random() * 33)
         code += digits[randomDigit]
     }
 

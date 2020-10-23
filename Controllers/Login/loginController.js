@@ -31,7 +31,13 @@ const confirmTwoStepCode = async (req, res) => {
     if (!user) 
         throw 'کد تایید اشتباه یا مدت زمان استفاده از آن به پایان رسیده است'
     
-    const entryToken = await jwt.sign(user, process.env.JWT_ENTRY_SECRET, { expiresIn })
+    const entryToken = await jwt.sign(
+            { user }, 
+            process.env.JWT_ENTRY_SECRET, 
+            { expiresIn }
+        )
+
+    await user.updateOne({ entryToken, twoStepCode: '' })
 
     res.json({ entryToken })
 }

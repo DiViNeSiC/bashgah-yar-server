@@ -42,10 +42,14 @@ const coachRegister = async (req, res) => {
         role: GYM_COACH_ROLE
     })
 
-    //FIX ADDING USER ID TO THE SPECIFIC GYM
-
     try {
         await newCoach.save()
+
+        const gym = await Gym.findById(req.payload.gym)
+        const { coaches } = gym
+        const newCoaches = [...coaches, newCoach.id]
+        
+        await gym.updateOne({ coaches: newCoaches })
 
         res.json({
             message: `ثبت شد ${username} مربی جدید با نام کاربری`
@@ -94,10 +98,15 @@ const athleteRegister = async (req, res) => {
         role: ATHLETE_ROLE
     })
 
-    //FIX ADDING USER ID TO THE SPECIFIC GYM
-
     try {
         await newAthlete.save()
+
+        const gym = await Gym.findById(req.payload.gym)
+        const { athletes } = gym
+        const newAthletes = [...athletes, newAthlete.id]
+        
+        await gym.updateOne({ athletes: newAthletes })
+
 
         res.json({
             message: `ثبت شد ${username} ورزشکار جدید با نام کاربری`

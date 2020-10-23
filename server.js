@@ -20,6 +20,9 @@ const auth = require('./Middlewares/Authentication/auth')
 const notAuth = require('./Middlewares/Authentication/notAuth')
 const rolePass = require('./Middlewares/Authentication/authRole')
 
+//ERRORHANDLER
+const { catchErrors } = require('./Handlers/errorHandler')
+
 //ROLES
 const {
     ATHLETE_ROLE,
@@ -48,13 +51,13 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(express.static('./Public'))
 
-app.use('/login', notAuth, loginRouter)
-app.use('/admin-registration', notAuth, adminRegistrationRouter)
-app.use('/site-admin', auth, rolePass(SITE_ADMIN_ROLE), siteAdminRouter)
-app.use('/gym-admin', auth, rolePass(GYM_ADMIN_ROLE), gymAdminRouter)
-app.use('/gym-manager', auth, rolePass(GYM_MANAGER_ROLE), gymManagerRouter)
-app.use('/gym-coach', auth, rolePass(GYM_COACH_ROLE), gymCoachRouter)
-app.use('/athlete', auth, rolePass(ATHLETE_ROLE), athleteRouter)
+app.use('/login', catchErrors(notAuth), loginRouter)
+app.use('/admin-registration', catchErrors(notAuth), adminRegistrationRouter)
+app.use('/site-admin', catchErrors(auth), catchErrors(rolePass(SITE_ADMIN_ROLE)), siteAdminRouter)
+app.use('/gym-admin', catchErrors(auth), catchErrors(rolePass(GYM_ADMIN_ROLE)), gymAdminRouter)
+app.use('/gym-manager', catchErrors(auth), catchErrors(rolePass(GYM_MANAGER_ROLE)), gymManagerRouter)
+app.use('/gym-coach', catchErrors(auth), catchErrors(rolePass(GYM_COACH_ROLE)), gymCoachRouter)
+app.use('/athlete', catchErrors(auth), catchErrors(rolePass(ATHLETE_ROLE)), athleteRouter)
 
 const port = process.env.PORT || 5000
 

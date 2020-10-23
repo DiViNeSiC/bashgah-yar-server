@@ -21,7 +21,7 @@ module.exports = async (req, res, next) => {
             throw 'ََمدت زمان کد ورودی شما به اتمام رسیده است'
         }
 
-        req.payload = payload
+        req.payload = payload.user
         next()
     } catch (err) {
         if (err.message === 'jwt expired') {

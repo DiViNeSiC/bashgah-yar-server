@@ -5,6 +5,8 @@ module.exports = (
     emailChecking = false
 ) => {
     let error = null
+    const numberRegExp = /^[0-9]+$/
+    const usernameRegExp = /^[-_.A-Za-z0-9]+$/
 
     if (!username) 
         return error = 'نام کاربری نیاز است' 
@@ -20,6 +22,12 @@ module.exports = (
 
     if (!phoneNumber) 
         return error = 'شماره تلفن نیاز است' 
+
+    if (!numberRegExp.test(phoneNumber)) 
+        return error = 'شماره تلفن باید شامل عدد باشد'
+
+    if (!usernameRegExp.test(username)) 
+        return error = "نام کاربری باید شامل حروف انگلیسی ، (-) ، (_) و (.) باشد"
 
     if (username.length < 6) 
         return error = 'نام کاربری حداقل باید شامل شش کاراکتر باشد' 
