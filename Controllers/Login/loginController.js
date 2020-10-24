@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const User = require('../../Models/User')
 const findUser = require('../../Handlers/LoginHandlers/findUser')
 const generateCode = require('../../Handlers/LoginHandlers/generateCode')
+const sendSms = require('../../Handlers/MessageSenders/smsSender')
 
 const regularLogin = async (req, res) => {
     const { credential, password } = req.body
@@ -15,13 +16,43 @@ const regularLogin = async (req, res) => {
 
     if (!passed) throw 'رمز عبور شما اشتباه است'
 
-    const twoStepCode = generateCode()
-    
-    await user.updateOne({ twoStepCode })
+    const regularLoginToken = await jwt.sign(
+        { id: user.id },
+        process.env.JWT_REGULAR_SECRET,
+        { expiresIn: '10m' }
+    )
 
-    // SEND CODE TO THE USER'S PHONE NUMBER
+    await user.updateOne({ regularLoginToken })
 
-    res.json({ message: 'کد ورودی به شماره تلفن شما ارسال شد' })
+    res.json({ message: `خوش آمدید ${user.username} کاربر گرامی` })
+}
+
+const sendTwoStepCode = async (req, res) => {
+    const { regularLoginToken } = req.body
+
+    try {
+        const payload = await jwt.verify(
+            regularLoginToken, 
+            process.env.JWT_REGULAR_SECRET
+        ) 
+
+        if (!payload) 
+            throw 'زمان احراز هویت شما به پایان رسیده است'
+
+        const user = await User.findById(payload.id)
+        if (!user) throw 'شما باید وارد حساب کاربری خود شوید'
+
+        const twoStepCode = generateCode()
+        await user.updateOne({ twoStepCode })
+        await sendSms(user.phoneNumber, twoStepCode)
+        
+        res.json({ message: 'کد تایید به شماره شما فرستاده شد' })
+    } catch (err) {
+        if (err.message === 'jwt expired') 
+            throw 'زمان احراز هویت شما به پایان رسیده است'
+        
+        res.status(500).json({ message: 'خطا در ارسال کد تایید' })
+    }
 }
 
 const confirmTwoStepCode = async (req, res) => {
@@ -32,12 +63,23 @@ const confirmTwoStepCode = async (req, res) => {
         throw 'کد تایید اشتباه یا مدت زمان استفاده از آن به پایان رسیده است'
     
     const entryToken = await jwt.sign(
-            { user }, 
-            process.env.JWT_ENTRY_SECRET, 
-            { expiresIn }
-        )
+        { user }, 
+        process.env.JWT_ENTRY_SECRET, 
+        { expiresIn }
+    )
 
-    await user.updateOne({ entryToken, twoStepCode: '' })
+    const refreshToken = await jwt.sign(
+        { user }, 
+        process.env.JWT_REFRESH_SECRET, 
+        { expiresIn }
+    )
+
+    await user.updateOne({ 
+        entryToken, 
+        refreshToken, 
+        twoStepCode: '',
+        regularLoginToken: ''
+    })
 
     res.json({ entryToken })
 }
