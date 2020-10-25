@@ -12,15 +12,14 @@ const adminRegistration = async (req, res) => {
         lastname,
         email,
         password,
-        siteRegistrationPassword,
+        registrationPassword,
         phoneNumber
     } = req.body
 
-    const passwordPassed = await bcrypt
-        .compare(
-            siteRegistrationPassword, 
-            process.env.ADMIN_REGISTRATION_PASSWORD
-        )
+    const passwordPassed = await bcrypt.compare(
+        registrationPassword, 
+        process.env.ADMIN_REGISTRATION_PASSWORD
+    )
 
     if (!passwordPassed) throw '!رمز ورودی برای ثبت ادمین اشتباه است'
 

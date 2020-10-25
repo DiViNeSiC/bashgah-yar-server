@@ -11,11 +11,8 @@ const gymRegister = async (req, res) => {
         req.files.map(file => file.filename) : null
 
     const {
-        name,
-        city,
-        address,
-        capacity,
-        phoneNumber
+        name, city, address,
+        capacity, phoneNumber
     } = req.body
 
     const formError = await gymFormCheck(

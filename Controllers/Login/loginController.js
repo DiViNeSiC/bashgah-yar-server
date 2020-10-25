@@ -17,14 +17,12 @@ const regularLogin = async (req, res) => {
     if (!passed) throw 'رمز عبور شما اشتباه است'
 
     const regularLoginToken = await jwt.sign(
-        { id: user.id },
+        { userId: user.id },
         process.env.JWT_REGULAR_SECRET,
         { expiresIn: '10m' }
     )
 
-    await user.updateOne({ regularLoginToken })
-
-    res.json({ message: `خوش آمدید ${user.username} کاربر گرامی` })
+    res.json({ regularLoginToken })
 }
 
 const sendTwoStepCode = async (req, res) => {
@@ -39,12 +37,13 @@ const sendTwoStepCode = async (req, res) => {
         if (!payload) 
             throw 'زمان احراز هویت شما به پایان رسیده است'
 
-        const user = await User.findById(payload.id)
-        if (!user) throw 'شما باید وارد حساب کاربری خود شوید'
+        const user = await User.findById(payload.userId)
+        if (!user) throw 'کاربری با این مشخصات پیدا نشد'
 
         const twoStepCode = generateCode()
         await user.updateOne({ twoStepCode })
-        await sendSms(user.phoneNumber, twoStepCode)
+        //FIX SENDING SMS WITH API
+        // await sendSms(user.phoneNumber, twoStepCode)
         
         res.json({ message: 'کد تایید به شماره شما فرستاده شد' })
     } catch (err) {
@@ -77,11 +76,10 @@ const confirmTwoStepCode = async (req, res) => {
     await user.updateOne({ 
         entryToken, 
         refreshToken, 
-        twoStepCode: '',
-        regularLoginToken: ''
+        twoStepCode: ''
     })
 
-    res.json({ entryToken })
+    res.json({ entryToken, refreshToken })
 }
 
-module.exports = { regularLogin, confirmTwoStepCode }
+module.exports = { regularLogin, confirmTwoStepCode, sendTwoStepCode }

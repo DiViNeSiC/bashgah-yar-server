@@ -16,17 +16,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    regularLoginToken: {
-        data: String,
-        default: ''
-    },
     entryToken: {
         data: String,
         default: ''
     },
     twoStepCode: {
         type: String,
-        expires: '1m',
+        index: { expires: 1 },
         default: ''
     },
     refreshToken: {
@@ -53,7 +49,7 @@ const userSchema = new mongoose.Schema({
     phoneNumber: String,
     avatarName: String,
     avatarImagePath: String
-})
+}, { timestamps: true })
 
 userSchema.pre('save', function() {
     if (this.avatarName !== '' && this.avatarName != null) {
