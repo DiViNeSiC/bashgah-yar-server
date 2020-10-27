@@ -12,9 +12,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         lowercase: true
     },
+    verifiedEmail: {
+        type: Boolean,
+        default: false
+    },
     role: {
         type: String,
         required: true
+    },
+    accountActivationToken: {
+        data: String,
+        default: ''
     },
     entryToken: {
         data: String,
@@ -30,6 +38,10 @@ const userSchema = new mongoose.Schema({
         default: ''
     },
     resetPassToken: {
+        data: String,
+        default: ''
+    },
+    deleteAccountToken: {
         data: String,
         default: ''
     },

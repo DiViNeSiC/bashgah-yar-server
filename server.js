@@ -6,9 +6,14 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
-//ROUTES
+//ROUTERS
+//GLOBAL ROUTERS
 const loginRouter = require('./Routes/GlobalRoutes/login')
+const activeAccountRouter = require('./Routes/GlobalRoutes/activeAccount')
 const adminRegistrationRouter = require('./Routes/GlobalRoutes/adminRegistration')
+const editAccountRouter = require('./Routes/GlobalRoutes/editAccount')
+
+//SPECIAL ROUTERS
 const siteAdminRouter = require('./Routes/MainRoutes/siteAdmin')
 const gymAdminRouter = require('./Routes/MainRoutes/gymAdmin')
 const gymManagerRouter = require('./Routes/MainRoutes/gymManager')
@@ -53,6 +58,9 @@ app.use(express.static('./Public'))
 
 app.use('/login', catchErrors(notAuth), loginRouter)
 app.use('/admin-registration', catchErrors(notAuth), adminRegistrationRouter)
+app.use('/account-activation', catchErrors(auth), activeAccountRouter)
+app.use('/edit-account', catchErrors(auth), editAccountRouter)
+
 app.use('/site-admin', catchErrors(auth), catchErrors(rolePass(SITE_ADMIN_ROLE)), siteAdminRouter)
 app.use('/gym-admin', catchErrors(auth), catchErrors(rolePass(GYM_ADMIN_ROLE)), gymAdminRouter)
 app.use('/gym-manager', catchErrors(auth), catchErrors(rolePass(GYM_MANAGER_ROLE)), gymManagerRouter)
