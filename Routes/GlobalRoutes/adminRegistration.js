@@ -1,8 +1,6 @@
 const router = require('express').Router()
 const { catchErrors } = require('../../Handlers/errorHandler')
-const { 
-    adminRegistration
-} = require('../../Controllers/Register/adminRegistrationController')
+const { adminRegistration } = require('../../Controllers/Register/adminRegistrationController')
 
 router.post('/', catchErrors(adminRegistration))
 

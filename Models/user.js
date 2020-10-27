@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const path = require('path')
-
 const avatarImageBasePath = 'Uploads/UserAvatars'
 
 const userSchema = new mongoose.Schema({
@@ -20,29 +19,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    accountActivationToken: {
-        data: String,
-        default: ''
-    },
     entryToken: {
         data: String,
-        default: ''
-    },
-    twoStepCode: {
-        type: String,
-        index: { expires: 1 },
         default: ''
     },
     refreshToken: {
         data: String,
         default: ''
     },
-    resetPassToken: {
-        data: String,
-        default: ''
-    },
-    deleteAccountToken: {
-        data: String,
+    twoStepCode: {
+        type: String,
+        index: { expires: 1 },
         default: ''
     },
     gym: {

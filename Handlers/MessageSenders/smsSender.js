@@ -8,7 +8,6 @@ module.exports = async (phoneNumber, twoStepCode) => {
     )
 
     const body = generateTemplate(twoStepCode)
-
     await client.messages.create({ 
         body,
         to: phoneNumber,

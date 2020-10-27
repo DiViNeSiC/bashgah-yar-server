@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const path = require('path')
-
 const gymImageBasePath = 'Uploads/GymImages'
 
 const gymSchema = new mongoose.Schema({

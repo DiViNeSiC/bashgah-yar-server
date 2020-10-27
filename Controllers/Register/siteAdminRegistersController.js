@@ -42,7 +42,6 @@ const gymAdminRegister = async (req, res) => {
 
     try {
         await newGymAdmin.save()
-
         res.json({
             message: `ثبت شد ${username} مدیر کل جدید با نام کاربری`
         })

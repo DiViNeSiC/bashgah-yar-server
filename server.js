@@ -61,11 +61,11 @@ app.use('/admin-registration', catchErrors(notAuth), adminRegistrationRouter)
 app.use('/account-activation', catchErrors(auth), activeAccountRouter)
 app.use('/edit-account', catchErrors(auth), editAccountRouter)
 
-app.use('/site-admin', catchErrors(auth), catchErrors(rolePass(SITE_ADMIN_ROLE)), siteAdminRouter)
-app.use('/gym-admin', catchErrors(auth), catchErrors(rolePass(GYM_ADMIN_ROLE)), gymAdminRouter)
-app.use('/gym-manager', catchErrors(auth), catchErrors(rolePass(GYM_MANAGER_ROLE)), gymManagerRouter)
-app.use('/gym-coach', catchErrors(auth), catchErrors(rolePass(GYM_COACH_ROLE)), gymCoachRouter)
-app.use('/athlete', catchErrors(auth), catchErrors(rolePass(ATHLETE_ROLE)), athleteRouter)
+app.use('/site-admin', catchErrors(auth), rolePass(SITE_ADMIN_ROLE), siteAdminRouter)
+app.use('/gym-admin', catchErrors(auth), rolePass(GYM_ADMIN_ROLE), gymAdminRouter)
+app.use('/gym-manager', catchErrors(auth), rolePass(GYM_MANAGER_ROLE), gymManagerRouter)
+app.use('/gym-coach', catchErrors(auth), rolePass(GYM_COACH_ROLE), gymCoachRouter)
+app.use('/athlete', catchErrors(auth), rolePass(ATHLETE_ROLE), athleteRouter)
 
 const port = process.env.PORT || 5000
 

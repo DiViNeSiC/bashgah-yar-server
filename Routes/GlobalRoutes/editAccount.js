@@ -1,8 +1,8 @@
 const router = require('express').Router()
-const { catchErrors } = require('../../Handlers/errorHandler')
 const emailExist = require('../../Middlewares/UserOperations/emailExistCheck')
 const emailVerified = require('../../Middlewares/UserOperations/emailVerifiedCheck')
-const {  
+const { catchErrors } = require('../../Handlers/errorHandler')
+const {
     getAccountInfo,
     updateAccountCredentials,
     updateEmail,
@@ -24,7 +24,6 @@ router.post(
     catchErrors(emailVerified),
     catchErrors(deleteAccount)
 )
-
 router.post(
     '/change-password', 
     catchErrors(emailExist),
@@ -32,12 +31,21 @@ router.post(
     catchErrors(updatePassword)
 )
 
-router.put('/credentials', catchErrors(updateAccountCredentials))
 router.put('/email', catchErrors(updateEmail))
 router.put('/avatar', catchErrors(updateAvatar))
-router.put('/confirm/password/:resetPassToken', catchErrors(resetPasswordConfirm))
+router.put(
+    '/credentials', 
+    catchErrors(updateAccountCredentials)
+)
+router.put(
+    '/confirm/password/:resetPassToken', 
+    catchErrors(resetPasswordConfirm)
+)
 
 router.delete('/avatar', catchErrors(deleteAvatar))
-router.delete('/confirm/delete-account/:deleteAccountToken', catchErrors(deleteAccountConfirm))
+router.delete(
+    '/confirm/delete-account/:deleteAccountToken', 
+    catchErrors(deleteAccountConfirm)
+)
 
 module.exports = router

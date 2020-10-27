@@ -97,4 +97,9 @@ const deleteAccountHtml = (url, token) => {
 `
 }
 
-module.exports = { activeEmailHtml, resetAccountPassword, forgotAccountPassword, deleteAccountHtml }
+module.exports = { 
+    activeEmailHtml, 
+    resetAccountPassword, 
+    forgotAccountPassword,
+    deleteAccountHtml 
+}

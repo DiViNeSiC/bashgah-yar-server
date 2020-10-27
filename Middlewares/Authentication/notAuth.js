@@ -6,9 +6,7 @@ module.exports = async (req, res, next) => {
         if (authToken) {
             const token = authToken.split(' ')[1]
             const user = await User.findOne({ entryToken: token })
-
-            if (user != null) 
-                throw 'شما از این کار منع شده اید'
+            if (user != null) throw 'شما از این کار منع شده اید'
         }
         
         next()

@@ -1,6 +1,5 @@
 module.exports = (req, res, next) => {
-    const { email } = req.payload
-    if (!email) 
+    if (!req.payload.email) 
         throw 'برای انجام این عملیات نیاز به ایمیل دارید'
 
     next()

@@ -8,10 +8,7 @@ const deleteAvatar = require('../../Handlers/FileHandlers/deleteAvatarFile')
 const { DELETE_ACCOUNT, RESET_PASSWORD } = require('../../Handlers/Constants/emailMethods')
 
 const getAccountInfo = async (req, res) => {
-    const user = await User.findById(req.payload._id)
-    if (!user) throw 'شما باید وارد حساب کاربری خود شوید'
-
-    res.json(( user ))
+    res.json({ user: req.payload })
 }
 
 const updateAccountCredentials = async (req, res) => {
@@ -36,6 +33,7 @@ const updateAccountCredentials = async (req, res) => {
 
 const updateEmail = async (req, res) => {
     const { email } = req.body
+    const { _id } = req.payload
 
     const userExist = await userExistCheck(
         null, email, null, req.payload
@@ -44,9 +42,7 @@ const updateEmail = async (req, res) => {
     if (userExist) throw userExist
 
     try {
-        const user = await User.findById(req.payload._id)
-        await user.updateOne({ email, verifiedEmail: false })
-
+        await User.findByIdAndUpdate(_id, { email, verifiedEmail: false })
         res.json({ message: 'ایمیل شما تغییر یافت، لطفا آن را هرچه سریعتر تایید کنید' })
     } catch {
         res.status(500).json({ message: 'خطا در تغییر ایمیل' })
@@ -55,7 +51,6 @@ const updateEmail = async (req, res) => {
 
 const updatePassword = async (req, res) => {
     const { currentPassword } = req.body
-
     const user = await User.findById(req.payload._id)
     
     const passed = await bcrypt.compare(currentPassword, user.password)
@@ -68,9 +63,7 @@ const updatePassword = async (req, res) => {
     )
     
     try {
-        await user.updateOne({ resetPassToken })
         await sendEmail(user.email, resetPassToken, RESET_PASSWORD)
-
         res.json({ message: 'ایمیل برای تغییر رمز عبور برای شما فرستاده شد' })
     } catch {
         res.status(500).json({ message: 'خطا در تغییر رمز ورودی' })
@@ -82,12 +75,11 @@ const updateAvatar = async (req, res) => {
     if (!avatarName) throw 'فایل آواتار خالی است'
     
     const user = await User.findById(req.payload._id)
+    const avatarImagePath = path.join('/', User.avatarImageBasePath, avatarName)
     if (user.avatarName) { 
         const deleteUserAvatarError = deleteAvatar(user.avatarName)
         if (deleteUserAvatarError) throw deleteUserAvatarError
     }
-
-    const avatarImagePath = path.join('/', User.avatarImageBasePath, avatarName)
 
     try {
         await user.updateOne({ avatarName, avatarImagePath })
@@ -114,7 +106,6 @@ const deleteAvatar = async (req, res) => {
 
 const deleteAccount = async (req, res) => {
     const { password } = req.body
-
     const user = await User.findById(req.payload._id)
     
     const passed = await bcrypt.compare(password, user.password)
@@ -127,9 +118,7 @@ const deleteAccount = async (req, res) => {
     )
 
     try {
-        await user.updateOne({ deleteAccountToken })
         await sendEmail(user.email, deleteAccountToken, DELETE_ACCOUNT)
-
         res.json({ message: 'ایمیل برای پاک کردن حساب کاربری برای شما فرستاده شد' })
     } catch {
         res.status(500).json({ message: 'خطا در پاک کردن حساب کاربری' })

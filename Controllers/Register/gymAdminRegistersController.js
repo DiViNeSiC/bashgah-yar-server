@@ -40,7 +40,6 @@ const gymRegister = async (req, res) => {
         const newGyms = [...adminGyms, newGym.id]
         
         await admin.updateOne({ adminGyms: newGyms })
-
         res.json({
             message: `ثبت شد ${name} باشگاه جدید با نام `
         })
@@ -97,8 +96,6 @@ const managerRegister = async (req, res) => {
         const newManagers = [...managers, newManager.id]
         
         await gym.updateOne({ managers: newManagers })
-
-
         res.json({
             message: `ثبت شد ${username} مدیر باشگاه جدید با نام کاربری`
         })

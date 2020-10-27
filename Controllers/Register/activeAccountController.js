@@ -5,8 +5,6 @@ const { EMAIL_ACTIVATION } = require('../../Handlers/Constants/emailMethods')
 
 const sendActivationEmail = async (req, res) => {
     const user = await User.findById(req.payload._id)
-    if (!user.email) throw 'شما برای این کار نیاز به ایمیل دارید'
-
     const accountActivationToken = await jwt.sign(
         { userId: user.id },
         process.env.JWT_ACC_ACTIVATION_SECRET,
@@ -14,9 +12,7 @@ const sendActivationEmail = async (req, res) => {
     )
 
     try {
-        await user.updateOne({ accountActivationToken })
         await sendEmail(user.email, accountActivationToken, EMAIL_ACTIVATION)
-
         res.json({ message: 'ایمیل تایید برای شما فرستاده شد' })
     } catch {
         res.status(500).json({ message: 'خطا در فرستادن ایمیل' })
@@ -38,11 +34,7 @@ const activeEmail = async (req, res) => {
         const user = await User.findById(payload.userId)
         if (!user) throw 'کاربری با این مشخصات پیدا نشد'
 
-        await user.updateOne({ 
-            verifiedEmail: true,
-            accountActivationToken: ''
-        })
-
+        await user.updateOne({ verifiedEmail: true })
         res.json({ message: 'حساب کاربری شما فعال گردید' })
     } catch (err) {
         if (err.message === 'jwt expired') 

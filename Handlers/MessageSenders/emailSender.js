@@ -20,11 +20,10 @@ module.exports = async (userEmail, token, method) => {
         auth: {
             user: process.env.AUTH_MANAGER_EMAIL.toString(), 
             pass: process.env.AUTH_MANAGER_PASSWORD.toString(),
-        },
+        }
     })
-    
-    const { html, subject } = generateEmailContent(process.env.CLIENT_URL, token, method)
-    
+
+    const { html, subject } = generateEmailContent(process.env.CLIENT_URL, token, method)    
     await transporter.sendMail({
         from: `"باشگاه یار" <${process.env.AUTH_MANAGER_EMAIL}>`, 
         to: userEmail, 

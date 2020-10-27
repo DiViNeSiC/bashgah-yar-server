@@ -1,6 +1,6 @@
 const router = require('express').Router()
-const { catchErrors } = require('../../Handlers/errorHandler')
 const emailExist = require('../../Middlewares/UserOperations/emailExistCheck')
+const { catchErrors } = require('../../Handlers/errorHandler')
 const { 
     sendActivationEmail,
     activeEmail

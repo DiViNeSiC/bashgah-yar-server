@@ -8,7 +8,6 @@ module.exports = async (req, res, next) => {
     
     const token = authHeader.split(' ')[1]
     const user = await User.findOne({ entryToken: token })
-
     if (!user) 
         throw 'ََشما باید وارد حساب کاربری خود شوید'
 

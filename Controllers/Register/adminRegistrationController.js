@@ -50,7 +50,6 @@ const adminRegistration = async (req, res) => {
 
     try {
         await newSiteAdmin.save()
-
         res.json({
             message: `ثبت شد ${username} مدیر سایت جدید با نام کاربری`
         })
