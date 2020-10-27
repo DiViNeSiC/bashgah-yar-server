@@ -1,8 +1,10 @@
 const bcrypt = require('bcrypt')
+const path = require('path')
 const jwt = require('jsonwebtoken')
 const User = require('../../Models/User')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
 const sendEmail = require('../../Handlers/MessageSenders/emailSender')
+const deleteAvatar = require('../../Handlers/FileHandlers/deleteAvatarFile')
 const { DELETE_ACCOUNT, RESET_PASSWORD } = require('../../Handlers/Constants/emailMethods')
 
 const getAccountInfo = async (req, res) => {
@@ -76,11 +78,38 @@ const updatePassword = async (req, res) => {
 }
 
 const updateAvatar = async (req, res) => {
+    const avatarName = req.file != null ? req.file.filename : null
+    if (!avatarName) throw 'فایل آواتار خالی است'
+    
+    const user = await User.findById(req.payload._id)
+    if (user.avatarName) { 
+        const deleteUserAvatarError = deleteAvatar(user.avatarName)
+        if (deleteUserAvatarError) throw deleteUserAvatarError
+    }
 
+    const avatarImagePath = path.join('/', User.avatarImageBasePath, avatarName)
+
+    try {
+        await user.updateOne({ avatarName, avatarImagePath })
+        res.json({ message: 'آواتار شما با موفقیت بروزرسانی شد' })
+    } catch {
+        res.status(500).json({ message: 'خطا در تغییر آواتار' })
+    }
 }
 
 const deleteAvatar = async (req, res) => {
+    const user = await User.findById(req.payload._id)
+    if (!user.avatarName) throw 'آواتاری برای پاک کردن وجود ندارد'
 
+    const deleteUserAvatarError = deleteAvatar(user.avatarName)
+    if (deleteUserAvatarError) throw deleteUserAvatarError
+
+    try {
+        await user.updateOne({ avatarName: '', avatarImagePath: '' })
+        res.json({ message: 'آواتار شما با موفقیت پاک شد' })
+    } catch {
+        res.status(500).json({ message: 'خطا در پاک کردن آواتار' })
+    }
 }
 
 const deleteAccount = async (req, res) => {
