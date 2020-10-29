@@ -8,12 +8,8 @@ const { GYM_COACH_ROLE, ATHLETE_ROLE } = require('../../Handlers/Constants/roles
 const coachRegister = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : ''
     const {
-        username,
-        name,
-        lastname,
-        email,
-        password,
-        phoneNumber
+        username, name, lastname,
+        email, password, phoneNumber
     } = req.body
 
     const formError = formCheck(
@@ -21,22 +17,15 @@ const coachRegister = async (req, res) => {
         lastname, email, 
         password, phoneNumber
     )
-
     if (formError) throw formError
 
     const userExist = await userExistCheck(username, email, phoneNumber)
-
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
-
     const newCoach = new User({
-        username,
-        name,
-        lastname,
-        email,
-        phoneNumber,
-        avatarName,
+        username, name, lastname,
+        email, phoneNumber, avatarName,
         password: hashedPassword,
         gym: req.payload.gym,
         role: GYM_COACH_ROLE
@@ -44,7 +33,6 @@ const coachRegister = async (req, res) => {
 
     try {
         await newCoach.save()
-
         const gym = await Gym.findById(req.payload.gym)
         const { coaches } = gym
         const newCoaches = [...coaches, newCoach.id]
@@ -63,12 +51,8 @@ const coachRegister = async (req, res) => {
 const athleteRegister = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : ''
     const {
-        username,
-        name,
-        lastname,
-        email,
-        password,
-        phoneNumber
+        username, name, lastname,
+        email, password, phoneNumber
     } = req.body
 
     const formError = formCheck(
@@ -76,30 +60,22 @@ const athleteRegister = async (req, res) => {
         lastname, email, 
         password, phoneNumber
     )
-
     if (formError) throw formError
 
     const userExist = await userExistCheck(username, email, phoneNumber)
-
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
-
     const newAthlete = new User({
-        username,
-        name,
-        lastname,
-        email,
-        phoneNumber,
-        avatarName,
-        gym: req.payload.gym,
+        username, name, lastname,
+        email, phoneNumber, avatarName,
         password: hashedPassword,
+        gym: req.payload.gym,
         role: ATHLETE_ROLE
     })
 
     try {
         await newAthlete.save()
-
         const gym = await Gym.findById(req.payload.gym)
         const { athletes } = gym
         const newAthletes = [...athletes, newAthlete.id]

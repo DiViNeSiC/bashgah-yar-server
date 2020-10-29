@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
+        default: '',
         lowercase: true
     },
     verifiedEmail: {
@@ -27,9 +28,8 @@ const userSchema = new mongoose.Schema({
         data: String,
         default: ''
     },
-    twoStepCode: {
+    timeBasedCode: {
         type: String,
-        index: { expires: 1 },
         default: ''
     },
     gym: {

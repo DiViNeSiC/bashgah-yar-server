@@ -7,13 +7,9 @@ const { SITE_ADMIN_ROLE } = require('../../Handlers/Constants/roles')
 const adminRegistration = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : ''
     const {
-        username,
-        name,
-        lastname,
-        email,
-        password,
-        registrationPassword,
-        phoneNumber
+        username, name, lastname,
+        email, password, phoneNumber,
+        registrationPassword
     } = req.body
 
     const passwordPassed = await bcrypt.compare(
@@ -28,22 +24,15 @@ const adminRegistration = async (req, res) => {
         lastname, email,
         password, phoneNumber, true
     )
-
     if (formError) throw formError
-
+    
     const userExist = await userExistCheck(username, email, phoneNumber)
-
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
-
     const newSiteAdmin = new User({
-        username,
-        name,
-        lastname,
-        email,
-        phoneNumber,
-        avatarName,
+        username, name, lastname,
+        email, phoneNumber, avatarName,
         password: hashedPassword,
         role: SITE_ADMIN_ROLE
     })

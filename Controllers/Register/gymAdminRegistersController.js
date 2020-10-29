@@ -19,26 +19,20 @@ const gymRegister = async (req, res) => {
         name, city, address, 
         phoneNumber, capacity
     )
-
     if (formError) throw formError
 
     const newGym = new Gym({
-        name,
-        city,
-        address,
-        capacity,
-        phoneNumber,
-        gymImageNames,
-        admin: req.payload._id
+        name, city, address,
+        capacity, phoneNumber,
+        gymImageNames, admin: req.payload.id
     })
 
     try {
         await newGym.save()
-
-        const admin = await User.findById(req.payload._id)
+        const admin = await User.findById(req.payload.id)
         const { adminGyms } = admin
         const newGyms = [...adminGyms, newGym.id]
-        
+
         await admin.updateOne({ adminGyms: newGyms })
         res.json({
             message: `ثبت شد ${name} باشگاه جدید با نام `
@@ -53,13 +47,8 @@ const gymRegister = async (req, res) => {
 const managerRegister = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : ''
     const {
-        username,
-        name,
-        lastname,
-        email,
-        password,
-        phoneNumber,
-        gymId
+        username, name, lastname, gymId,
+        email, password, phoneNumber
     } = req.body
 
     const formError = formCheck(
@@ -67,30 +56,21 @@ const managerRegister = async (req, res) => {
         lastname, email, 
         password, phoneNumber, true
     )
-
     if (formError) throw formError
 
     const userExist = await userExistCheck(username, email, phoneNumber)
-
     if (userExist) throw userExist
 
     const hashedPassword = await bcrypt.hash(password, 10)
-
     const newManager = new User({
-        username,
-        name,
-        lastname,
-        email,
-        phoneNumber,
-        avatarName,
-        gym: gymId,
-        password: hashedPassword,
+        username, name, lastname,
+        email, phoneNumber, avatarName,
+        gym: gymId, password: hashedPassword,
         role: GYM_MANAGER_ROLE
     })
 
     try {
         await newManager.save()
-
         const gym = await Gym.findById(gymId)
         const { managers } = gym
         const newManagers = [...managers, newManager.id]

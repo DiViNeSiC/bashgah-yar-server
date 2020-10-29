@@ -9,11 +9,12 @@ const cors = require('cors')
 //ROUTERS
 //GLOBAL ROUTERS
 const loginRouter = require('./Routes/GlobalRoutes/login')
+const forgotPasswordRouter = require('./Routes/GlobalRoutes/forgotPassword')
 const activeAccountRouter = require('./Routes/GlobalRoutes/activeAccount')
 const adminRegistrationRouter = require('./Routes/GlobalRoutes/adminRegistration')
 const editAccountRouter = require('./Routes/GlobalRoutes/editAccount')
 
-//SPECIAL ROUTERS
+//MAIN ROUTERS
 const siteAdminRouter = require('./Routes/MainRoutes/siteAdmin')
 const gymAdminRouter = require('./Routes/MainRoutes/gymAdmin')
 const gymManagerRouter = require('./Routes/MainRoutes/gymManager')
@@ -57,6 +58,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static('./Public'))
 
 app.use('/login', catchErrors(notAuth), loginRouter)
+app.use('/forgot-password', catchErrors(notAuth), forgotPasswordRouter)
 app.use('/admin-registration', catchErrors(notAuth), adminRegistrationRouter)
 app.use('/account-activation', catchErrors(auth), activeAccountRouter)
 app.use('/edit-account', catchErrors(auth), editAccountRouter)

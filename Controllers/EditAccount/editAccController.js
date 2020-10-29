@@ -4,27 +4,25 @@ const jwt = require('jsonwebtoken')
 const User = require('../../Models/User')
 const userExistCheck = require('../../Handlers/FormChecks/userExistCheck')
 const sendEmail = require('../../Handlers/MessageSenders/emailSender')
-const deleteAvatar = require('../../Handlers/FileHandlers/deleteAvatarFile')
+const deleteAvatarFile = require('../../Handlers/FileHandlers/deleteAvatarFile')
 const { DELETE_ACCOUNT, RESET_PASSWORD } = require('../../Handlers/Constants/emailMethods')
 
 const getAccountInfo = async (req, res) => {
-    res.json({ user: req.payload })
+    const user = await User.findById(req.payload.id)
+    res.json({ user })
 }
 
 const updateAccountCredentials = async (req, res) => {
     const { username, name, lastname, phoneNumber } = req.body
+    const user = await User.findById(req.payload.id)
 
     const userExist = await userExistCheck(
-        username, null, phoneNumber, req.payload
+        username, null, phoneNumber, user
     )
-
     if (userExist) throw userExist
 
     try {
-        await User.findByIdAndUpdate(req.payload._id, {
-            username, name, lastname, phoneNumber
-        })
-    
+        await user.updateOne({ username, name, lastname, phoneNumber })
         res.json({ message: 'مشخصات شما بروز گردید' })
     } catch {
         res.status(500).json({ message: 'خطا در بروز رسانی مشخصات' })
@@ -33,16 +31,12 @@ const updateAccountCredentials = async (req, res) => {
 
 const updateEmail = async (req, res) => {
     const { email } = req.body
-    const { _id } = req.payload
-
-    const userExist = await userExistCheck(
-        null, email, null, req.payload
-    ) 
-
+    const user = await User.findById(req.payload.id)
+    const userExist = await userExistCheck(null, email, null, user) 
     if (userExist) throw userExist
 
     try {
-        await User.findByIdAndUpdate(_id, { email, verifiedEmail: false })
+        await user.updateOne({ email, verifiedEmail: false })
         res.json({ message: 'ایمیل شما تغییر یافت، لطفا آن را هرچه سریعتر تایید کنید' })
     } catch {
         res.status(500).json({ message: 'خطا در تغییر ایمیل' })
@@ -51,8 +45,7 @@ const updateEmail = async (req, res) => {
 
 const updatePassword = async (req, res) => {
     const { currentPassword } = req.body
-    const user = await User.findById(req.payload._id)
-    
+    const user = await User.findById(req.payload.id)
     const passed = await bcrypt.compare(currentPassword, user.password)
     if (!passed) throw 'رمز ورودی فعلی شما اشتباه است'
 
@@ -74,10 +67,10 @@ const updateAvatar = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : null
     if (!avatarName) throw 'فایل آواتار خالی است'
     
-    const user = await User.findById(req.payload._id)
+    const user = await User.findById(req.payload.id)
     const avatarImagePath = path.join('/', User.avatarImageBasePath, avatarName)
     if (user.avatarName) { 
-        const deleteUserAvatarError = deleteAvatar(user.avatarName)
+        const deleteUserAvatarError = deleteAvatarFile(user.avatarName)
         if (deleteUserAvatarError) throw deleteUserAvatarError
     }
 
@@ -90,10 +83,10 @@ const updateAvatar = async (req, res) => {
 }
 
 const deleteAvatar = async (req, res) => {
-    const user = await User.findById(req.payload._id)
+    const user = await User.findById(req.payload.id)
     if (!user.avatarName) throw 'آواتاری برای پاک کردن وجود ندارد'
 
-    const deleteUserAvatarError = deleteAvatar(user.avatarName)
+    const deleteUserAvatarError = deleteAvatarFile(user.avatarName)
     if (deleteUserAvatarError) throw deleteUserAvatarError
 
     try {
@@ -106,8 +99,7 @@ const deleteAvatar = async (req, res) => {
 
 const deleteAccount = async (req, res) => {
     const { password } = req.body
-    const user = await User.findById(req.payload._id)
-    
+    const user = await User.findById(req.payload.id)
     const passed = await bcrypt.compare(password, user.password)
     if (!passed) throw 'رمز ورودی فعلی شما اشتباه است'
 

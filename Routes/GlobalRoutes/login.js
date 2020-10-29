@@ -1,9 +1,7 @@
 const router = require('express').Router()
 const { catchErrors } = require('../../Handlers/errorHandler')
-const { 
-    regularLogin,
-    confirmTwoStepCode,
-    sendTwoStepCode
+const {
+    regularLogin, confirmTwoStepCode, sendTwoStepCode
 } = require('../../Controllers/Login/loginController')
 
 router.post('/', catchErrors(regularLogin))
