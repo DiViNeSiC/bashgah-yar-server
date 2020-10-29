@@ -60,6 +60,7 @@ const confirmTwoStepCode = async (req, res) => {
 
     const userInfo = {
         id: user.id,
+        username: user.username,
         gym: user.gym,
         role: user.role
     }
