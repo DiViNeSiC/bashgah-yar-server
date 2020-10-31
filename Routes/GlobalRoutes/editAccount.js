@@ -4,18 +4,16 @@ const emailExist = require('../../Middlewares/UserOperations/emailExistCheck')
 const emailVerified = require('../../Middlewares/UserOperations/emailVerifiedCheck')
 const { catchErrors } = require('../../Handlers/errorHandler')
 const {
-    getAccountInfo, updateAccountCredentials,
-    updateEmail, updatePassword, updateAvatar,
-    deleteAvatar, deleteAccount
-} = require('../../Controllers/EditAccount/editAccController')
+    updateAccountCredentials,
+    updateEmail, sendChangePasswordEmail,
+    deleteAvatar, sendDeleteAccountEmail, updateAvatar
+} = require('../../Controllers/EditInformations/editAccController')
 const {  
     deleteAccountConfirm, resetPasswordConfirm
-} = require('../../Controllers/EditAccount/twoStepEditController')
+} = require('../../Controllers/EditInformations/twoStepEditController')
 
-router.get('/', catchErrors(getAccountInfo))
-
-router.post('/delete-account', emailExist, emailVerified, catchErrors(deleteAccount))
-router.post('/change-password', emailExist, emailVerified, catchErrors(updatePassword))
+router.post('/delete-account', emailExist, emailVerified, catchErrors(sendDeleteAccountEmail))
+router.post('/change-password', emailExist, emailVerified, catchErrors(sendChangePasswordEmail))
 
 router.put('/email', catchErrors(updateEmail))
 router.put('/credentials', catchErrors(updateAccountCredentials))

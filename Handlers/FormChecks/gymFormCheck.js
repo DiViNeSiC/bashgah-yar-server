@@ -1,6 +1,6 @@
 const Gym = require('../../Models/gym')
 
-module.exports = async (name, city, address, phoneNumber, capacity) => {
+module.exports = async (name, city, address, phoneNumber, capacity, gym = null) => {
     let error = null
     const numberRegexp = /^[0-9]+$/
     const allGyms = await Gym.find()
@@ -26,19 +26,20 @@ module.exports = async (name, city, address, phoneNumber, capacity) => {
     if (name.length < 5) 
         return error = 'نام باشگاه باید شامل هشت کاراکتر باشد' 
 
-    const phoneNumberExist = allGyms.some(gym => 
-        gym.phoneNumber === phoneNumber
-    )
+    const nameExist = allGyms.some(gym => gym.name === name)
+    const phoneNumberExist = allGyms.some(gym => gym.phoneNumber === phoneNumber)
 
-    if (phoneNumberExist) 
-        return error = 'باشگاهی دیگر با همین شماره تلفن وجود دارد'
-
-    const nameExist = allGyms.some(gym => 
-        gym.name === name
-    )
-
-    if (nameExist) 
-        return error = 'باشگاهی دیگر با همین نام وجود دارد'
-
+    if (gym) {
+        if (phoneNumberExist && gym.phoneNumber !== phoneNumber)
+            return error = 'باشگاهی دیگر با همین شماره تلفن وجود دارد'
+        if (nameExist && gym.name !== name) 
+            return error = 'باشگاهی دیگر با همین نام وجود دارد'
+    }
+    if (!gym) {
+        if (phoneNumberExist) 
+            return error = 'باشگاهی دیگر با همین شماره تلفن وجود دارد'
+        if (nameExist) 
+            return error = 'باشگاهی دیگر با همین نام وجود دارد'
+    }
     return error
 }

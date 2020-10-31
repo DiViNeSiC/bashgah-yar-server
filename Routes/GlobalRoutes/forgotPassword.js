@@ -1,8 +1,8 @@
 const router = require('express').Router()
 const { catchErrors } = require('../../Handlers/errorHandler')
 const {
-    forgotPassWithEmail, forgotPassWithPhoneNumber,
-    verifyTimeBasedCode, verifyToken
+    forgotPassWithEmail, verifyTimeBasedCode, 
+    forgotPassWithPhoneNumber, verifyToken
 } = require('../../Controllers/Login/forgotPassController')
 
 router.post('/with-email', catchErrors(forgotPassWithEmail))

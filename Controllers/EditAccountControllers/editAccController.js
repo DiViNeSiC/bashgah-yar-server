@@ -7,11 +7,6 @@ const sendEmail = require('../../Handlers/MessageSenders/emailSender')
 const deleteAvatarFile = require('../../Handlers/FileHandlers/deleteAvatarFile')
 const { DELETE_ACCOUNT, RESET_PASSWORD } = require('../../Handlers/Constants/emailMethods')
 
-const getAccountInfo = async (req, res) => {
-    const user = await User.findById(req.payload.id)
-    res.json({ user })
-}
-
 const updateAccountCredentials = async (req, res) => {
     const { username, name, lastname, phoneNumber } = req.body
     const user = await User.findById(req.payload.id)
@@ -32,18 +27,21 @@ const updateAccountCredentials = async (req, res) => {
 const updateEmail = async (req, res) => {
     const { email } = req.body
     const user = await User.findById(req.payload.id)
+    if (user.verifiedEmail) 
+        throw 'شما قبلا ایمیل خود را تایید کرده اید و دیگر قادر به تغییر آن نیستید'
+
     const userExist = await userExistCheck(null, email, null, user) 
     if (userExist) throw userExist
 
     try {
-        await user.updateOne({ email, verifiedEmail: false })
+        await user.updateOne({ email })
         res.json({ message: 'ایمیل شما تغییر یافت، لطفا آن را هرچه سریعتر تایید کنید' })
     } catch {
         res.status(500).json({ message: 'خطا در تغییر ایمیل' })
     }
 }
 
-const updatePassword = async (req, res) => {
+const sendChangePasswordEmail = async (req, res) => {
     const { currentPassword } = req.body
     const user = await User.findById(req.payload.id)
     const passed = await bcrypt.compare(currentPassword, user.password)
@@ -97,7 +95,7 @@ const deleteAvatar = async (req, res) => {
     }
 }
 
-const deleteAccount = async (req, res) => {
+const sendDeleteAccountEmail = async (req, res) => {
     const { password } = req.body
     const user = await User.findById(req.payload.id)
     const passed = await bcrypt.compare(password, user.password)
@@ -118,11 +116,8 @@ const deleteAccount = async (req, res) => {
 }
 
 module.exports = {
-    getAccountInfo,
     updateAccountCredentials,
-    updateEmail,
-    updatePassword,
-    updateAvatar,
-    deleteAvatar,
-    deleteAccount
+    updateEmail, sendChangePasswordEmail,
+    updateAvatar, deleteAvatar,
+    sendDeleteAccountEmail
 }

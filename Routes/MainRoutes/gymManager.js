@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const upload = require('../../Middlewares/Uploads/avatarImage')
 const registers = require('../GymManagerRoutes/registers')
+const gettingUsers = require('../GymManagerRoutes/gettingUsers')
 const emailVerified = require('../../Middlewares/UserOperations/emailVerifiedCheck')
 
 router.use(
@@ -8,6 +9,11 @@ router.use(
     emailVerified, 
     upload.single('avatar'), 
     registers
+)
+
+router.use(
+    '/users', 
+    gettingUsers
 )
 
 module.exports = router
