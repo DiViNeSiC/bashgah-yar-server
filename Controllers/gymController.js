@@ -1,8 +1,48 @@
 const path = require('path')
-const Gym = require('../../Models/Gym')
-const gymFormCheck = require('../../Handlers/FormChecks/gymFormCheck')
-const deleteGymPicFiles = require('../../Handlers/FileHandlers/deleteGymPicFiles')
-const deleteAllGymUsers = require('../../Handlers/GymHandlers/deleteAllGymUsers')
+const Gym = require('../Models/Gym')
+const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
+const deleteGymPicFiles = require('../Handlers/FileHandlers/deleteGymPicFiles')
+const deleteAllGymUsers = require('../Handlers/GymHandlers/deleteAllGymUsers')
+const { SITE_ADMIN_ROLE } = require('../Handlers/Constants/roles')
+
+const getUserGym = async (req, res) => {
+    const gym = await Gym
+        .findById(req.user.gym)
+        .populate('admin')
+        .populate('managers')
+        .populate('coaches')
+        .populate('athletes')
+        .exec()
+    res.json({ gym })
+}
+
+const getAdminGymsById = async (req, res) => {
+    const { id, role } = req.user
+    const { adminId } = req.params
+    const admin = role === SITE_ADMIN_ROLE ? adminId : id
+    const gyms = await Gym
+        .find({ admin })
+        .populate('admin')
+        .populate('managers')
+        .populate('coaches')
+        .populate('athletes')
+        .exec()
+    res.json({ gyms })
+}
+
+const getGymById = async (req, res) => {
+    const { gymId } = req.params
+    const gym = await Gym
+        .findById(gymId)
+        .populate('admin')
+        .populate('managers')
+        .populate('coaches')
+        .populate('athletes')
+        .exec()
+
+    if (!gym) throw 'باشگاهی با این مشخصات وجود ندارد'
+    res.json({ gym })
+}
 
 const editInfo = async (req, res) => {
     const { gymId } = req.params
@@ -52,12 +92,12 @@ const addPicture = async (req, res) => {
 
 const deleteOnePicture = async (req, res) => {
     const { gymId, filename } = req.params
-    const gym = await Gym.findById(gymId)
-    
     const deletePicErr = deleteGymPicFiles([...filename])
     if (deletePicErr) throw deletePicErr
     
+    const gym = await Gym.findById(gymId)
     const { gymImageNames } = gym
+    
     const newImages = gymImageNames.filter(image => image !== filename)
     const newImagePaths = newImages
         .map(image => path.join('/', Gym.gymImageBasePath, image))
@@ -76,7 +116,6 @@ const deleteOnePicture = async (req, res) => {
 const deleteAllPictures = async (req, res) => {
     const { gymId } = req.params
     const gym = await Gym.findById(gymId)
-
     const deletePicErr = deleteGymPicFiles(gym.gymImageNames)
     if (deletePicErr) throw deletePicErr
 
@@ -109,9 +148,13 @@ const deleteGymAccount = async (req, res) => {
     }
 }
 
-module.exports = {
-    editInfo, addPicture,
+module.exports = { 
+    getUserGym, 
+    getAdminGymsById, 
+    getGymById, 
+    editInfo, 
+    addPicture,
     deleteOnePicture,
     deleteAllPictures,
-    deleteGymAccount
+    deleteGymAccount 
 }
