@@ -1,4 +1,4 @@
-const Gym = require('../../Models/gym')
+const Gym = require('../../Models/Gym')
 
 module.exports = async (name, city, address, phoneNumber, capacity, gym = null) => {
     let error = null

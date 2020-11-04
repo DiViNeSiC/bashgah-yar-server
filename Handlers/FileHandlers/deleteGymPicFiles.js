@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs')
-const Gym = require('../../Models/gym')
+const Gym = require('../../Models/Gym')
 const gymImagesBasePath = path.join('public', Gym.gymImageBasePath)
 
 module.exports = (fileNames) => {

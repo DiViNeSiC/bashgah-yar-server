@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const User = require('../Models/User')
-const Gym = require('../Models/gym')
+const Gym = require('../Models/Gym')
 const formCheck = require('../Handlers/FormChecks/formCheck')
 const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
 const userExistCheck = require('../Handlers/FormChecks/userExistCheck')

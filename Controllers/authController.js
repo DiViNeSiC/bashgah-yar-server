@@ -6,14 +6,12 @@ const findUser = require('../Handlers/LoginHandlers/findUser')
 const generateCode = require('../Handlers/LoginHandlers/generateCode')
 const sendSms = require('../Handlers/MessageSenders/smsSender')
 const sendEmail = require('../Handlers/MessageSenders/emailSender')
-const generateCode = require('../Handlers/LoginHandlers/generateCode')
 const { FORGOT_PASSWORD, EMAIL_ACTIVATION } = require('../Handlers/Constants/emailMethods')
 
 const regularLogin = async (req, res) => {
     const { credential, password } = req.body
     const user = await findUser(credential)
     if (!user) throw 'کاربری با این مشخصات پیدا نشد'
-
     const passed = await bcrypt.compare(password, user.password)
     if (!passed) throw 'رمز عبور شما اشتباه است'
 
@@ -50,7 +48,6 @@ const sendTwoStepCode = async (req, res) => {
 const confirmTwoStepCode = async (req, res) => {
     const { twoStepCode, expiresIn } = req.body
     const lowerCasedCode = twoStepCode.toLowerCase()
-
     const timeBasedCode = await TimeBasedCode.findOne({ code: lowerCasedCode })
     if (!timeBasedCode)        
         throw 'کد تایید اشتباه یا مدت زمان استفاده از آن به پایان رسیده است'
@@ -99,15 +96,19 @@ const verifyRefreshToken = async (req, res) => {
             role: user.role,
             expiresIn: payload.expiresIn
         }
-        const newToken = await jwt.sign(
+        const newEntryToken = await jwt.sign(
             { ...userInfo }, 
             process.env.JWT_ENTRY_SECRET, 
             { expiresIn: payload.expiresIn }
         )
+        const newRefreshToken = await jwt.sign(
+            { ...userInfo }, 
+            process.env.JWT_REFRESH_SECRET
+        )
 
-        await user.updateOne({ entryToken: newToken })
-        res.json({ message: 'توکن شما آپدیت شد', newToken })
-    } catch  {
+        await user.updateOne({ entryToken: newEntryToken, refreshToken: newRefreshToken })
+        res.json({ message: 'توکن شما آپدیت شد', newEntryToken, newRefreshToken })
+    } catch {
         res.status(500).json({ message: 'خطایی رخ داده است' })
     }
 }

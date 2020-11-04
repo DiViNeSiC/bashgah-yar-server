@@ -16,7 +16,8 @@ const {
 } = require('../Controllers/gymController')
 
 router.get('/user-gym', authRole(GYM_MANAGER_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE), catchErrors(getUserGym))
-router.get('/admin-gyms/all/:adminId', authRole(SITE_ADMIN_ROLE, GYM_ADMIN_ROLE), catchErrors(getAdminGymsById))
+router.get('/admin-gyms', authRole(GYM_ADMIN_ROLE), catchErrors(getAdminGymsById))
+router.get('/admin-gyms/all/:adminId', authRole(SITE_ADMIN_ROLE), catchErrors(getAdminGymsById))
 router.get('/admin-gyms/one/:gymId', authRole(SITE_ADMIN_ROLE, GYM_ADMIN_ROLE), checkGymAdminAccess, catchErrors(getGymById))
 
 router.post('/picture/:gymId', authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAdminAccess, gymPicUpload.single('gymPic'), catchErrors(addPicture))

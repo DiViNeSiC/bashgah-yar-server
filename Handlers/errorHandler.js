@@ -1,12 +1,23 @@
+const deleteAvatarFile = require('./FileHandlers/deleteAvatarFile')
+const deleteGymPicFiles = require('./FileHandlers/deleteGymPicFiles')
+
 /*Catch Errors Handler*/
 exports.catchErrors = (fn) => {
     return function (req, res, next) {
         fn(req, res, next).catch((err) => {
             if (typeof err === "string") {
+                if (req.file) 
+                    deleteAvatarFile(req.file.filename)
+                if (req.files)
+                    deleteGymPicFiles(req.files.map(file => file.filename))
                 res.status(400).json({
                     message: err,
                 })
             } else {
+                if (req.file) 
+                    deleteAvatarFile(req.file.filename)
+                if (req.files) 
+                    deleteGymPicFiles(req.files.map(file => file.filename))
                 next(err)
             }
         })

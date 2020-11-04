@@ -108,10 +108,10 @@ const deleteAvatar = async (req, res) => {
 
 const changePasswordConfirm = async (req, res) => {
     try {
-        const { resetPassToken } = req.params
+        const { changePasswordToken } = req.params
         const { newPassword } = req.body
         const payload = await jwt
-            .verify(resetPassToken, process.env.JWT_RESET_PASS_SECRET)
+            .verify(changePasswordToken, process.env.JWT_RESET_PASS_SECRET)
 
         const user = await User.findById(payload.userId)
         const hashedPassword = await bcrypt.hash(newPassword, 10)
