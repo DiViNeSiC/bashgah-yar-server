@@ -1,4 +1,4 @@
-const activeEmailHtml = (url, token) => {
+exports.activeAcc = (url, token) => {
     return `
     <h2>لطفا ایمیل خود را تایید کنید</h2>
     </br>
@@ -18,11 +18,11 @@ const activeEmailHtml = (url, token) => {
     <p>
         برای تایید حساب کاربری خود بر روی لینک زیر کلیک کنید یا لینک را به صورت دستی کپی کرده و از آن استفاده کنید
     </p>
-    <a href=${url}/${token}>فعال کردن حساب کاربری</a>
+    <a href=${url}/dashboard/active-account/${token}>فعال کردن حساب کاربری</a>
 `
 }
 
-const resetAccountPassword = (url, token) => {
+exports.changePass = (url, token) => {
     return `
     <h2>نغییر رمز ورودی</h2>
     </br>
@@ -42,11 +42,11 @@ const resetAccountPassword = (url, token) => {
     <p>
         برای تغییر رمز ورودی خود بر روی لینک زیر کلیک کرده یا آن را به صورت دستی کپی کنید و استفاده کنید
     </p>
-    <a href=${url}/${token}>تغییر رمز عبور</a>
+    <a href=${url}/dashboard/profile/change-pass/${token}>تغییر رمز عبور</a>
 `
 }
 
-const forgotAccountPassword = (url, token) => {
+exports.forgotPass = (url, token) => {
     return `
     <h2>آیا رمز خود را فراموش کرده اید ؟</h2>
     </br>
@@ -66,11 +66,11 @@ const forgotAccountPassword = (url, token) => {
     <p>
         برای تغییر رمز عبور خود بر روی لینک زیر کلیک کنید یا لینک را به صورت دستی کپی کرده و از آن استفاده کنید
     </p>
-    <a href=${url}/${token}>تغییر رمز عبور</a>
+    <a href=${url}/forgot-pass/token/${token}>تغییر رمز عبور</a>
 `
 }
 
-const deleteAccountHtml = (url, token) => {
+exports.deleteAcc = (url, token) => {
     return `
     <h2></h2>
     </br>
@@ -95,11 +95,4 @@ const deleteAccountHtml = (url, token) => {
     </p>
     <a href=${url}/${token}>پاک کردن حساب کاربری</a>
 `
-}
-
-module.exports = { 
-    activeEmailHtml, 
-    resetAccountPassword, 
-    forgotAccountPassword,
-    deleteAccountHtml 
 }

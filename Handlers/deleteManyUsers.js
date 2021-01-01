@@ -5,7 +5,5 @@ module.exports = async (userIds) => {
     try {
         await User.deleteMany({ _id: userIds })
         return error
-    } catch {
-        return error = 'خطا در پاک کردن باشگاه'
-    }
+    } catch { return error = 'خطا در پاک کردن باشگاه' }
 }

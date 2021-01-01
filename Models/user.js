@@ -28,6 +28,14 @@ const userSchema = new mongoose.Schema({
         data: String,
         default: ''
     },
+    forgotPassToken: {
+        data: String,
+        default: ''
+    },
+    confirmationToken: {
+        data: String,
+        default: ''
+    },
     timeBasedCode: {
         type: String,
         default: ''

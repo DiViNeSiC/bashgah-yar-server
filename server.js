@@ -2,9 +2,9 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
 }
 
+const cors = require('cors')
 const express = require('express')
 const mongoose = require('mongoose')
-const cors = require('cors')
 
 const app = express()
 
@@ -16,13 +16,13 @@ const gymRegistersRouter = require('./Routes/gymRegistersRouter')
 const siteAdminRegisterRouter = require('./Routes/siteAdminRegisterRouter')
 
 //Middlewares
-const { auth, notAuth } = require('./Middlewares/authenticates')
 const { emailVerifiedCheck } = require('./Middlewares/checks')
+const { auth, notAuth } = require('./Middlewares/authenticates')
 
 mongoose.connect(process.env.DATABASE_URI, { 
+    useCreateIndex: true,
     useNewUrlParser: true, 
     useUnifiedTopology: true, 
-    useCreateIndex: true 
 })
 
 const db = mongoose.connection
@@ -36,8 +36,8 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static('./Public'))
 
 app.use('/auth', authRouter)
+app.use('/all-gyms', gymControlRouter)
 app.use('/user', auth, userControlRouter)
-app.use('/all-gyms', auth, gymControlRouter)
 app.use('/site', notAuth, siteAdminRegisterRouter)
 app.use('/gym', auth, emailVerifiedCheck, gymRegistersRouter)
 

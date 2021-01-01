@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken')
 const User = require('../Models/User')
 
-const auth = async (req, res, next) => {
+exports.auth = async (req, res, next) => {
     const authHeader = req.headers.authorization 
     const token = authHeader && authHeader.split(' ')[1]
     if (!token) return res.status(401).json({ 
@@ -28,7 +28,7 @@ const auth = async (req, res, next) => {
     }
 }
 
-const authRole = (...entryRole) => (req, res, next) => {
+exports.authRole = (...entryRole) => (req, res, next) => {
     if (!entryRole.includes(req.user.role)) 
         return res.status(403).json({ 
             message: 'شما نمیتوانید به این بخش دسترسی داشته باشید' 
@@ -36,12 +36,10 @@ const authRole = (...entryRole) => (req, res, next) => {
     next()
 }
 
-const notAuth = async (req, res, next) => {
+exports.notAuth = async (req, res, next) => {
     const authToken = req.headers.authorization
     if (authToken) return res.status(403).json({ 
         message: 'شما از این کار منع شده اید'
     })
     next()
 }
-
-module.exports = { auth, authRole, notAuth }

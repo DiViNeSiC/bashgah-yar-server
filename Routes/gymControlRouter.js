@@ -1,31 +1,25 @@
 const router = require('express').Router()
 const { catchErrors } = require('../Handlers/errorHandler')
-const { authRole } = require('../Middlewares/authenticates')
-const { emailVerifiedCheck, checkGymAdminAccess } = require('../Middlewares/checks')
 const { gymPicUpload } = require('../Middlewares/uploadImage')
-const { GYM_MANAGER_ROLE, GYM_ADMIN_ROLE, SITE_ADMIN_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE } = require('../Handlers/Constants/roles')
+const { auth, authRole } = require('../Middlewares/authenticates')
+const { GYM_ADMIN_ROLE, SITE_ADMIN_ROLE } = require('../Handlers/Constants/roles')
+const { emailVerifiedCheck, checkParamId, checkGymAccess } = require('../Middlewares/checks')
 const { 
-    getUserGym,
-    getGymById,
-    getAdminGymsById,
-    addPicture,
-    deleteAllPictures,
-    deleteGymAccount,
-    deleteOnePicture,
-    editInfo,
+    deleteAllPictures, editInfo, addPicture, getGymById, getGymStaff,
+    getGymByIdForEdit, getAdminGyms, getGlobalGyms, deleteOnePicture, deleteGymAccount,
 } = require('../Controllers/gymController')
 
-router.get('/user-gym', authRole(GYM_MANAGER_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE), catchErrors(getUserGym))
-router.get('/admin-gyms', authRole(GYM_ADMIN_ROLE), catchErrors(getAdminGymsById))
-router.get('/admin-gyms/all/:adminId', authRole(SITE_ADMIN_ROLE), catchErrors(getAdminGymsById))
-router.get('/admin-gyms/one/:gymId', authRole(SITE_ADMIN_ROLE, GYM_ADMIN_ROLE), checkGymAdminAccess, catchErrors(getGymById))
+router.get('/', catchErrors(getGlobalGyms))
+router.get('/:gymId', checkParamId, catchErrors(getGymById))
+router.get('/staff/:gymId', checkParamId, auth, checkGymAccess, catchErrors(getGymStaff)) 
+router.get('/edit/:gymId', checkParamId, auth, authRole(GYM_ADMIN_ROLE), checkGymAccess, catchErrors(getGymByIdForEdit))
+router.get('/admin/:adminId', checkParamId, auth, authRole(SITE_ADMIN_ROLE, GYM_ADMIN_ROLE), catchErrors(getAdminGyms))
 
-router.post('/picture/:gymId', authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAdminAccess, gymPicUpload.single('gymPic'), catchErrors(addPicture))
+router.post('/picture/:gymId', checkParamId, auth, authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAccess, gymPicUpload.single('gymPic'), catchErrors(addPicture))
+router.put('/info/:gymId', checkParamId, auth, authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAccess, catchErrors(editInfo))
 
-router.put('/info/:gymId', authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAdminAccess, catchErrors(editInfo))
-
-router.delete('/remove/:gymId', authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAdminAccess, catchErrors(deleteGymAccount))
-router.delete('/picture/:gymId', authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAdminAccess, catchErrors(deleteAllPictures))
-router.delete('/picture/:gymId/:filename', authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAdminAccess, catchErrors(deleteOnePicture))
+router.delete('/remove/:gymId', checkParamId, auth, authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAccess, catchErrors(deleteGymAccount))
+router.delete('/picture/:gymId', checkParamId, auth, authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAccess, catchErrors(deleteAllPictures))
+router.delete('/picture/:gymId/:filename', checkParamId, auth, authRole(GYM_ADMIN_ROLE), emailVerifiedCheck, checkGymAccess, catchErrors(deleteOnePicture))
 
 module.exports = router

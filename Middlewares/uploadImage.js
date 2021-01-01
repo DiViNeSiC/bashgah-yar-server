@@ -6,18 +6,16 @@ const imageMimeTypes = ['image/jpeg', 'image/png', 'image/jpg']
 const gymImageBasePath = path.join('public', Gym.gymImageBasePath)
 const avatarImageBasePath = path.join('public', User.avatarImageBasePath)
 
-const avatarUpload = multer({
+exports.avatarUpload = multer({
     dest: avatarImageBasePath,
     fileFilter: (req, file, callback) => { 
         callback(null, imageMimeTypes.includes(file.mimetype)) 
     }
 })
 
-const gymPicUpload = multer({
+exports.gymPicUpload = multer({
     dest: gymImageBasePath,
     fileFilter: (req, file, callback) => {
         callback(null, imageMimeTypes.includes(file.mimetype)) 
     }
 })
-
-module.exports = { avatarUpload, gymPicUpload }

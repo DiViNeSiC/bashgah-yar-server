@@ -1,61 +1,59 @@
 const path = require('path')
-const ObjectId = require('mongoose').Types.ObjectId
 const Gym = require('../Models/Gym')
 const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
 const deleteGymPicFiles = require('../Handlers/FileHandlers/deleteGymPicFiles')
 const deleteManyUsers = require('../Handlers/deleteManyUsers')
+const { GYM_ADMIN_ROLE } = require('../Handlers/Constants/roles')
 
-const getUserGym = async (req, res) => {
-    const gym = await Gym
-        .findById(req.user.gym)
-        .populate('admin')
-        .populate('managers')
-        .populate('coaches')
-        .populate('athletes')
-        .exec()
-    res.json({ gym })
-}
-
-const getAdminGymsById = async (req, res) => {
-    const { adminId } = req.params
-    if (adminId && !ObjectId.isValid(adminId)) 
-        throw 'کاربری با این مشخصات یافت نشد'
-    const admin = adminId ? adminId : req.user.id
-    const gyms = await Gym
-        .find({ admin })
-        .populate('admin')
-        .populate('managers')
-        .populate('coaches')
-        .populate('athletes')
-        .exec()
-    if (!gyms) throw 'کاربری با این مشخصات یافت نشد'    
+exports.getGlobalGyms = async (req, res) => {
+    const gyms = await Gym.find()
     res.json({ gyms })
 }
 
-const getGymById = async (req, res) => {
+exports.getAdminGyms = async (req, res) => {
+    const { adminId } = req.params
+    if (req.user.role === GYM_ADMIN_ROLE && req.user.id !== adminId)
+        throw 'شما نمی توانید به این بخش دسترسی داشته باشید'
+    const gyms = await Gym.find({ admin: adminId }).populate('admin').exec()
+    if (!gyms || !gyms.length) throw 'باشگاهی یافت نشد'
+    res.json({ gyms, adminUsername: gyms[0].admin.username })
+}
+
+exports.getGymStaff = async (req, res) => {
     const { gymId } = req.params
-    const gym = await Gym
-        .findById(gymId)
-        .populate('admin')
-        .populate('managers')
-        .populate('coaches')
-        .populate('athletes')
-        .exec()
+    const gym = await Gym.findById(gymId)
+        .populate('admin').populate('managers')
+        .populate('coaches').populate('athletes').exec()
+    if (!gym) throw 'باشگاهی با این مشخصات وجود ندارد'
+
+    res.json({ 
+        gymName: gym.name, staff: {
+            admin: gym.admin, managers: gym.managers,
+            coaches: gym.coaches, athletes: gym.athletes,
+        } 
+    })
+}
+
+exports.getGymById = async (req, res) => {
+    const { gymId } = req.params
+    const gym = await Gym.findById(gymId).populate('admin').exec()
     if (!gym) throw 'باشگاهی با این مشخصات وجود ندارد'
     res.json({ gym })
 }
 
-const editInfo = async (req, res) => {
+exports.getGymByIdForEdit = async (req, res) => {
     const { gymId } = req.params
-    const { 
-        name, city, capacity, 
-        address, phoneNumber 
-    } = req.body
+    const gym = await Gym.findById(gymId)
+    if (!gym) throw 'باشگاهی با این مشخصات وجود ندارد'
+    res.json({ gym })
+}
+
+exports.editInfo = async (req, res) => {
+    const { gymId } = req.params
+    const { name, city, capacity, address, phoneNumber } = req.body
 
     const gym = await Gym.findById(gymId)    
-    const formError = await gymFormCheck(
-        name, city, address, phoneNumber, capacity, gym
-    )
+    const formError = await gymFormCheck(name, city, address, phoneNumber, capacity, gym)
     if (formError) throw formError
 
     try {
@@ -66,33 +64,30 @@ const editInfo = async (req, res) => {
     }
 }
 
-const addPicture = async (req, res) => {
+exports.addPicture = async (req, res) => {
     const { gymId } = req.params
     const newGymPic = req.file != null ? req.file.filename : ''
     if (!newGymPic) throw 'عکسی دریافت نشد'
-    
+
     const gym = await Gym.findById(gymId)
     const { gymImageNames } = gym
     const newImages = [...gymImageNames, newGymPic]
     if (newImages.length > 12) 
         throw 'شما نمیتوانید بیشتر از دوازده تا عکس برای هر باشگاه بگذارید'
 
-    const newImagePaths = newImages
-        .map(image => path.join('/', Gym.gymImageBasePath, image))
+    const newImagePaths = newImages.map(image => path.join('/', Gym.gymImageBasePath, image))
 
     try {
-        await gym.updateOne({ 
-            gymImageNames: newImages, 
-            gymImagePaths: newImagePaths 
-        })
+        await gym.updateOne({ gymImageNames: newImages, gymImagePaths: newImagePaths })
         res.json({ message: 'عکس های باشگاه بروزرسانی گردید' })
     } catch {
         res.status(500).json({ message: 'خطا در بروزرسانی تصاویر باشگاه شما' })
     }
 }
 
-const deleteOnePicture = async (req, res) => {
+exports.deleteOnePicture = async (req, res) => {
     const { gymId, filename } = req.params
+
     const deletePicErr = deleteGymPicFiles([...filename])
     if (deletePicErr) throw deletePicErr
 
@@ -100,23 +95,18 @@ const deleteOnePicture = async (req, res) => {
     const { gymImageNames } = gym
     
     const newImages = gymImageNames.filter(image => image !== filename)
-    const newImagePaths = newImages
-        .map(image => path.join('/', Gym.gymImageBasePath, image))
+    const newImagePaths = newImages.map(image => path.join('/', Gym.gymImageBasePath, image))
 
     try {
-        await gym.updateOne({ 
-            gymImageNames: newImages, 
-            gymImagePaths: newImagePaths 
-        })
+        await gym.updateOne({ gymImageNames: newImages, gymImagePaths: newImagePaths })
         res.json({ message: 'عکس های باشگاه بروزرسانی گردید' })
     } catch {
         res.status(500).json({ message: 'خطا در بروزرسانی تصاویر باشگاه شما' })
     }
 }
 
-const deleteAllPictures = async (req, res) => {
+exports.deleteAllPictures = async (req, res) => {
     const { gymId } = req.params
-
     const gym = await Gym.findById(gymId)
     const deletePicErr = deleteGymPicFiles(gym.gymImageNames)
     if (deletePicErr) throw deletePicErr
@@ -129,7 +119,7 @@ const deleteAllPictures = async (req, res) => {
     }
 }
 
-const deleteGymAccount = async (req, res) => {
+exports.deleteGymAccount = async (req, res) => {
     const { gymId } = req.params
     const gym = await Gym.findById(gymId)
     const { managers, coaches, athletes, gymImageNames } = gym
@@ -137,9 +127,7 @@ const deleteGymAccount = async (req, res) => {
     const deletePicErr = deleteGymPicFiles(gymImageNames)
     if (deletePicErr) throw deletePicErr
     
-    const deleteAllUsersErr = await deleteManyUsers(
-        [...managers, ...coaches, ...athletes]
-    )
+    const deleteAllUsersErr = await deleteManyUsers([...managers, ...coaches, ...athletes])
     if (deleteAllUsersErr) throw deleteAllUsersErr
 
     try {
@@ -148,15 +136,4 @@ const deleteGymAccount = async (req, res) => {
     } catch {
         res.status(500).json({ message: 'خطا در پاک کردن باشگاه شما' })
     }
-}
-
-module.exports = { 
-    getUserGym, 
-    getAdminGymsById, 
-    getGymById, 
-    editInfo, 
-    addPicture,
-    deleteOnePicture,
-    deleteAllPictures,
-    deleteGymAccount 
 }

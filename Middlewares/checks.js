@@ -1,130 +1,140 @@
-const ObjectId = require('mongoose').Types.ObjectId
 const User = require('../Models/User')
 const Gym = require('../Models/Gym')
-const { ATHLETE_ROLE, GYM_COACH_ROLE, GYM_MANAGER_ROLE, SITE_ADMIN_ROLE } = require('../Handlers/Constants/roles')
+const ObjectId = require('mongoose').Types.ObjectId
+const { ATHLETE_ROLE,  GYM_COACH_ROLE, GYM_MANAGER_ROLE, GYM_ADMIN_ROLE, SITE_ADMIN_ROLE } = require('../Handlers/Constants/roles')
 
-const emailExistCheck = async (req, res, next) => {
+exports.emailExistCheck = async (req, res, next) => {
     const user = await User.findById(req.user.id)
     if (!user.email) 
-        return res.status(403).json({ 
-            message: 'برای انجام این عملیات نیاز به ایمیل دارید' 
-        })
+        return res.status(403).json({ message: 'برای انجام این عملیات نیاز به ایمیل دارید' })
     next()
 }
 
-const emailVerifiedCheck = async (req, res, next) => {
+exports.emailVerifiedCheck = async (req, res, next) => {
     const user = await User.findById(req.user.id)
     if (!user.verifiedEmail) 
-        return res.status(403).json({
-            message: 'برای انجام این عملیات نیاز به تایید کردن ایمیل خود دارید' 
-        })
+        return res.status(403).json({ message: 'برای انجام این عملیات نیاز به تایید کردن ایمیل خود دارید' })
     next()
 }
 
-const emailNotVerifiedCheck = async (req, res, next) => {
+exports.emailNotVerifiedCheck = async (req, res, next) => {
     const user = await User.findById(req.user.id)
     if (user.verifiedEmail) 
-        return res.status(403).json({
-            message: 'ایمیل شما در حال حاضر فعال است' 
-        })
+        return res.status(403).json({ message: 'ایمیل شما در حال حاضر فعال است' })
     next()
 }
 
-const isSelectedUserExist = async (req, res, next) => {
-    if (!ObjectId.isValid(req.params.userId)) return res.status(404).json({
-        message: 'کاربری با این مشخصات یافت نشد'
-    })
+exports.checkParamId = async (req, res, next) => {
+    const { gymId, userId, adminId } = req.params
+    const message = 'مشخصات دریافت شده صحیح نمی باشد'
+    if (gymId && !ObjectId.isValid(gymId)) return res.status(400).json({ message })
+    if (userId && !ObjectId.isValid(userId)) return res.status(400).json({ message })
+    if (adminId && !ObjectId.isValid(adminId)) return res.status(400).json({ message })
     next()
 }
 
-const checkGymAdminAccess = async (req, res, next) => {
-    const { gymId } = req.params
-    if (!ObjectId.isValid(gymId)) 
-        return res.status(404).json({ 
-            message: 'باشگاهی با این مشخصات وجود ندارد'
-        })
-    const gym = await Gym.findById(gymId)
-    if (req.user.role === SITE_ADMIN_ROLE) return next()
-    if (gym.admin.toString() !== req.user.id) 
-        return res.status(403).json({ 
-            message: 'شما به این باشگاه دسترسی ندارید' 
-        })
-    next()
-}
-
-const checkUserInAdminGyms = async (req, res, next) => {
-    const { userId } = req.params
-    const admin = await User
-        .findById(req.user.id)
-        .populate('adminGyms')
-        .exec()
-
-    const staffArray = [].concat(...admin.adminGyms
-        .map(gym => [...gym.managers, ...gym.coaches, ...gym.athletes]))
-    const allStaff = staffArray.map(staff => staff.toString())
-    if (!allStaff.includes(userId)) return res.status(404).json({
-        message: 'کاربری با این مشخصات یافت نشد'
-    })
-    next()
-}
-
-const checkUserInStaffGym = async (req, res, next) => {
-    const { userId } = req.params
-    const loggedUser = await User
-        .findById(req.user.id)
-        .populate('gym')
-        .exec()
-
-    const { gym: { managers, coaches, athletes }} = loggedUser
-    const staffArray = [].concat(...[...managers, ...coaches, ...athletes])
-    const allStaff = staffArray.map(staff => staff.toString())
-    if (!allStaff.includes(userId)) return res.status(404).json({
-        message: 'کاربری با این مشخصات یافت نشد'
-    })
-    next()
-}
-
-const checkPermission = async (req, res, next) => {
-    const user = await User.findById(req.params.userId)
-    const permissionRoles = req.user.role === GYM_MANAGER_ROLE ?
-        [GYM_COACH_ROLE, ATHLETE_ROLE] :
-        [ATHLETE_ROLE]
-    if (!user) return res.status(404).json({
-        message: 'کاربری با این مشخصات یافت نشد'
-    })
-    if (!permissionRoles.includes(user.role)) return res.status(403).json({
-        message: 'شما نمیتوانید به این کاربر دسترسی داشته باشید'
-    })
-    next()
-}
-
-const checkIsNotHimSelf = async (req, res, next) => {
+exports.checkIsNotHimSelf = async (req, res, next) => {
     if (req.user.id === req.params.userId) return res.status(403).json({
-        message: 'شما نمیتوانید حساب کاربری خود را پاک کنید'
+        message: 'خطا! شما نمی توانید به این کاربر دسترسی داشته باشید'
     })
     next()
 }
 
-const checkUserIsNotSiteAdmin = async (req, res, next) => {
-    const user = await User.findById(req.params.userId)
-    if (!user) return res.status(404).json({
-        message: 'کاربری با این مشخصات یافت نشد'
+exports.checkGymAccess = async (req, res, next) => {
+    const { gymId } = req.params
+    const loggedUser = await User.findById(req.user.id)
+    const loggedUserIsSiteAdmin = loggedUser.role === SITE_ADMIN_ROLE
+    const loggedUserIsGymAdmin = loggedUser.role === GYM_ADMIN_ROLE
+    const loggedUserIsGymStaff = loggedUser.role === GYM_MANAGER_ROLE || 
+        loggedUser.role === GYM_COACH_ROLE || loggedUser.role === ATHLETE_ROLE
+
+    if (loggedUserIsSiteAdmin) return next()
+
+    if (loggedUserIsGymAdmin) {
+        const { adminGyms } = loggedUser
+        if (!adminGyms.length) return res.status(404).json({
+            message: 'باشگاهی یافت نشد'
+        })
+        if (!adminGyms.includes(gymId)) return res.status(403).json({
+            message: 'شما نمی توانید به کاربران این باشگاه دسترسی داشته باشید'
+        })
+    }
+
+    if (loggedUserIsGymStaff && loggedUser.gym !== gymId) return res.status(403).json({
+        message: 'شما نمی توانید به کاربران این باشگاه دسترسی داشته باشید'
     })
-    if (user.role === SITE_ADMIN_ROLE) return res.status(403).json({
-        message: 'شما نمیتوانید به حساب کاربری ادمین سایت دسترسی داشته باشید'
-    })
+    
     next()
 }
 
-module.exports = { 
-    emailExistCheck,
-    emailVerifiedCheck, 
-    emailNotVerifiedCheck,
-    checkUserInAdminGyms,
-    checkUserInStaffGym,
-    isSelectedUserExist,
-    checkPermission,
-    checkGymAdminAccess,
-    checkIsNotHimSelf,
-    checkUserIsNotSiteAdmin
+exports.checkUserAccessForGet = async (req, res, next) => {
+    const { userId } = req.params
+    const selectedUser = await User.findById(userId)
+        .populate('adminGyms').populate('gym').exec()
+
+    if (!selectedUser) return res.status(404).json({ message: 'کاربری با این مشخصات یافت نشد' })
+    if (selectedUser.role === SITE_ADMIN_ROLE)
+        return res.status(403).json({ message: 'شما نمی توانید به اطلاعات این کاربر دسترسی داشته باشید' })
+
+    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec() 
+
+    if (loggedUser.role === SITE_ADMIN_ROLE) {
+        req.selectedUser = selectedUser
+        return next()
+    }
+
+    if (loggedUser.role === GYM_ADMIN_ROLE) {
+        const { adminGyms } = loggedUser
+        if (!adminGyms.length) 
+            return res.status(404).json({ message: 'شما باشگاهی برای دسترسی به حساب کاربری از آن را ندارید' })
+
+        const staffArray = [].concat(...adminGyms.map(gym => [...gym.managers, ...gym.coaches, ...gym.athletes]))
+        const allStaff = staffArray.map(staff => staff.toString())
+
+        if (!allStaff.includes(selectedUser.id)) 
+            return res.status(403).json({ message: 'شما به حساب کاربری مورد نظر دسترسی ندارید' })
+    }
+
+    if ((loggedUser.role === GYM_MANAGER_ROLE || 
+        loggedUser.role === GYM_COACH_ROLE || 
+        loggedUser.role === ATHLETE_ROLE) && 
+        selectedUser.gym.id !== loggedUser.gym.toString()
+    ) return res.status(403).json({ message: 'شما به حساب کاربری مورد نظر دسترسی ندارید' })
+
+    req.selectedUser = selectedUser
+    next()
+}
+
+exports.checkUserAccessForDelete = async (req, res, next) => {
+    const { userId } = req.params
+    const selectedUser = await User.findById(userId)
+    if (!selectedUser) return res.status(404).json({ message: 'کاربری با این مشخصات یافت نشد' })
+    if (selectedUser.role === SITE_ADMIN_ROLE || selectedUser.role === GYM_ADMIN_ROLE) 
+        return res.status(403).json({ message: 'شما نمی توانید حساب کاریر مورد نظر را پاک کنید' })
+
+    const selectedUserGym = await Gym.findById(selectedUser.gym)
+    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec()
+
+    if (loggedUser.role === GYM_ADMIN_ROLE) {
+        const { adminGyms } = loggedUser
+        if (!adminGyms.length) 
+            return res.status(404).json({ message: 'شما باشگاهی برای پاک کردن حساب کاربری از آن را ندارید' })
+        
+        const staffArray = [].concat(...adminGyms.map(gym => [...gym.managers, ...gym.coaches, ...gym.athletes]))
+        const allStaff = staffArray.map(staff => staff.toString())
+
+        if (!allStaff.includes(userId))
+            return res.status(403).json({ message: 'شما نمی توانید حساب کاریر مورد نظر را پاک کنید' })
+    }
+
+    if (loggedUser.role === GYM_MANAGER_ROLE) {
+        if (selectedUser.role === GYM_MANAGER_ROLE) 
+            return res.status(403).json({ message: 'شما نمی توانید حساب کاریر مورد نظر را پاک کنید' })
+        if (selectedUser.gym.toString() !== loggedUser.gym.toString())
+            return res.status(403).json({ message: 'شما نمی توانید حساب کاریر مورد نظر را پاک کنید' })
+    }
+
+    req.selectedUser = selectedUser
+    req.selectedUserGym = selectedUserGym
+    next()
 }

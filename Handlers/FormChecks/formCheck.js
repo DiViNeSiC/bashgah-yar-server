@@ -1,9 +1,4 @@
-module.exports = (
-    username, name, 
-    lastname, email, 
-    password, phoneNumber, 
-    emailChecking = false
-) => {
+module.exports = (username, name, lastname, email, password, phoneNumber, emailChecking = false) => {
     let error = null
     const numberRegExp = /^[0-9]+$/
     const usernameRegExp = /^[-_.A-Za-z0-9]+$/

@@ -6,25 +6,41 @@ const userExistCheck = require('../Handlers/FormChecks/userExistCheck')
 const sendEmail = require('../Handlers/MessageSenders/emailSender')
 const deleteAvatarFile = require('../Handlers/FileHandlers/deleteAvatarFile')
 const { RESET_PASSWORD } = require('../Handlers/Constants/emailMethods')
+const { GYM_ADMIN_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE, GYM_MANAGER_ROLE } = require('../Handlers/Constants/roles')
 
-const getLoggedUser = async (req, res) => {
+exports.getAllGymAdmins = async (req, res) => {
+    const gymAdmins = await User.find({ role: GYM_ADMIN_ROLE })
+    res.json({ gymAdmins })
+}
+
+exports.getGymCoachesAndAthletes = async (req, res) => {
+    const loggedUser = await User.findById(req.user.id)
+    const coaches = await User.find({ gym: loggedUser.gym, role: GYM_COACH_ROLE })
+    const athletes = await User.find({ gym: loggedUser.gym, role: ATHLETE_ROLE })
+    res.json({ coaches, athletes })
+}
+
+exports.getGymAthletes = async (req, res) => {
+    const loggedUser = await User.findById(req.user.id)
+    const athletes = await User.find({ gym: loggedUser.gym, role: ATHLETE_ROLE })
+    res.json({ athletes })
+}
+
+exports.getLoggedUser = async (req, res) => {
     const user = await User.findById(req.user.id)
+        .populate('adminGyms').populate('gym').exec()
     res.json({ user })
 }
 
-const getUserById = async (req, res) => {
-    const { userId } = req.params
-    const user = await User.findById(userId)
-    res.json({ user })
+exports.getUserById = async (req, res) => {
+    res.json({ user: req.selectedUser })
 }
 
-const updateAccountCredentials = async (req, res) => {
+exports.updateAccountCredentials = async (req, res) => {
     const { username, name, lastname, phoneNumber } = req.body
     const user = await User.findById(req.user.id)
 
-    const userExist = await userExistCheck(
-        username, null, phoneNumber, user
-    )
+    const userExist = await userExistCheck(username, null, phoneNumber, user)
     if (userExist) throw userExist
 
     try {
@@ -35,7 +51,7 @@ const updateAccountCredentials = async (req, res) => {
     }
 }
 
-const updateEmail = async (req, res) => {
+exports.updateEmail = async (req, res) => {
     const { email } = req.body
     const user = await User.findById(req.user.id)
     if (user.verifiedEmail) 
@@ -52,16 +68,14 @@ const updateEmail = async (req, res) => {
     }
 }
 
-const sendChangePasswordEmail = async (req, res) => {
+exports.sendChangePasswordEmail = async (req, res) => {
     const { currentPassword } = req.body
     const user = await User.findById(req.user.id)
     const passed = await bcrypt.compare(currentPassword, user.password)
     if (!passed) throw 'رمز ورودی فعلی شما اشتباه است'
 
     const resetPassToken = await jwt.sign(
-        { userId: user.id }, 
-        process.env.JWT_RESET_PASS_SECRET, 
-        { expiresIn: '15m' }
+        { userId: user.id }, process.env.JWT_RESET_PASS_SECRET, { expiresIn: '15m' }
     )
     
     try {
@@ -72,7 +86,7 @@ const sendChangePasswordEmail = async (req, res) => {
     }
 }
 
-const updateAvatar = async (req, res) => {
+exports.updateAvatar = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : null
     if (!avatarName) throw 'فایل آواتار خالی است'
     
@@ -91,7 +105,7 @@ const updateAvatar = async (req, res) => {
     }
 }
 
-const deleteAvatar = async (req, res) => {
+exports.deleteAvatar = async (req, res) => {
     const user = await User.findById(req.user.id)
     if (!user.avatarName) throw 'آواتاری برای پاک کردن وجود ندارد'
 
@@ -106,20 +120,15 @@ const deleteAvatar = async (req, res) => {
     }
 }
 
-const changePasswordConfirm = async (req, res) => {
+exports.changePasswordConfirm = async (req, res) => {
     try {
         const { changePasswordToken } = req.params
         const { newPassword } = req.body
-        const payload = await jwt
-            .verify(changePasswordToken, process.env.JWT_RESET_PASS_SECRET)
+        const payload = await jwt.verify(changePasswordToken, process.env.JWT_RESET_PASS_SECRET)
 
         const user = await User.findById(payload.userId)
         const hashedPassword = await bcrypt.hash(newPassword, 10)
-        await user.updateOne({ 
-            password: hashedPassword, 
-            entryToken: '', 
-            refreshToken: ''
-        })
+        await user.updateOne({ password: hashedPassword, entryToken: '', refreshToken: '' })
         res.json({ message: 'رمز عبور شما با موفقیت تغییر یافت' })
     } catch (err) {
         if (err.message === 'jwt expired') 
@@ -129,23 +138,25 @@ const changePasswordConfirm = async (req, res) => {
     }
 }
 
-const deleteUserById = async (req, res) => {
+exports.deleteGymStaffAccount = async (req, res) => {
     try {
-        await User.findByIdAndDelete(req.params.userId)
-        res.json({ message: 'حساب کاربری مورد نظر شما با موفقیت پاک شد' })
-    } catch {
-        res.status(500).json({ message: 'خطا در پاک کردن حساب کاربر' })
+        const { selectedUser, selectedUserGym } = req
+        const { managers, coaches, athletes } = selectedUserGym
+        if (selectedUser.role === GYM_MANAGER_ROLE) {
+            const newManagers = managers.filter(manager => manager !== selectedUser.id)
+            await selectedUserGym.updateOne({ managers: newManagers })
+        }
+        if (selectedUser.role === GYM_COACH_ROLE) {
+            const newCoaches = coaches.filter(coach => coach !== selectedUser.id)
+            await selectedUserGym.updateOne({ coaches: newCoaches })
+        }
+        if (selectedUser.role === ATHLETE_ROLE) {
+            const newAthletes = athletes.filter(athlete => athlete !== selectedUser.id)
+            await selectedUserGym.updateOne({ athletes: newAthletes })
+        }
+        await selectedUser.deleteOne()
+        res.json({ message: 'حساب کاربری مورد نظر شما پاک گردید' })
+    } catch (err) {
+        res.status(500).json({ message: 'خطا در پاک کردن حساب کاربری' })
     }
-}
-
-module.exports = { 
-    getLoggedUser, 
-    getUserById,
-    updateEmail, 
-    updateAvatar, 
-    deleteAvatar,
-    deleteUserById,
-    updateAccountCredentials,
-    sendChangePasswordEmail,
-    changePasswordConfirm, 
 }

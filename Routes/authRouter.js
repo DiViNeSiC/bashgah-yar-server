@@ -1,19 +1,11 @@
 const router = require('express').Router()
+const { catchErrors } = require('../Handlers/errorHandler')
 const { auth, notAuth } = require('../Middlewares/authenticates')
 const { emailExistCheck, emailNotVerifiedCheck } = require('../Middlewares/checks')
-const { catchErrors } = require('../Handlers/errorHandler')
 const {
-    regularLogin, 
-    sendTwoStepCode,
-    confirmTwoStepCode,
-    sendActivationEmail,
-    activeEmail,
-    verifyRefreshToken, 
-    forgotPassWithEmail, 
-    forgotPassWithPhoneNumber,
-    verifyTimeBasedCode, 
-    verifyToken,
-    logout
+    sendTwoStepCode, confirmTwoStepCode, verifyRefreshToken,
+    logout, forgotPassWithEmail, verifyToken, activeEmail, regularLogin, 
+    sendActivationEmail, verifyTimeBasedCode, forgotPassWithPhoneNumber,
 } = require('../Controllers/authController')
 
 router.post('/login', notAuth, catchErrors(regularLogin))
