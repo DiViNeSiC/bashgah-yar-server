@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const { catchErrors } = require('../Handlers/errorHandler')
 const { authRole } = require('../Middlewares/authenticates')
-const { avatarUpload, gymPicUpload } = require('../Middlewares/uploadImage')
+const { avatarUpload, gymPicUpload } = require('../Middlewares/uploads')
 const { GYM_MANAGER_ROLE, GYM_ADMIN_ROLE, SITE_ADMIN_ROLE } = require('../Handlers/Constants/roles')
 const { gymRegister, coachRegister, managerRegister, athleteRegister, gymAdminRegister } = require('../Controllers/registrationController')
 

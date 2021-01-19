@@ -1,16 +1,15 @@
-const twilio = require('twilio')
-const generateTemplate = require('../Constants/smsTemplate')
+const { forgotPasswordCode, loginConfirmCode } = require('../Constants/smsTemplates')
+const { smsMethods: { FORGOT_PASSWORD, LOGIN_CONFIRM } } = require('../Constants/sendersMethods')
 
-module.exports = async (phoneNumber, twoStepCode) => {
-    const client = new twilio(
-        process.env.TWILIO_ACCOUNT_SID, 
-        process.env.TWILIO_AUTH_TOKEN
-    )
+module.exports = async (phoneNumber, code, method) => {
+    return
+    const smsContent = generateTemplate(code, method)
+}
 
-    const body = generateTemplate(twoStepCode)
-    await client.messages.create({ 
-        body,
-        to: phoneNumber,
-        from: process.env.TWILIO_PHONE_NUMBER
-    })
+function generateEmailContent(code, method) {
+    switch(method) {
+        case LOGIN_CONFIRM: return loginConfirmCode(code)
+        case FORGOT_PASSWORD: return forgotPasswordCode(code)
+        default: return null
+    }
 }

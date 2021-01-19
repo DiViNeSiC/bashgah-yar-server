@@ -52,6 +52,9 @@ const userSchema = new mongoose.Schema({
     ],
     name: String,
     lastname: String,
+    weight: Number,
+    height: Number,
+    bloodType: Number,
     password: String,
     phoneNumber: String,
     avatarName: String,
@@ -60,10 +63,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', function() {
     if (this.avatarName !== '' && this.avatarName != null) {
-        return (
-            this.avatarImagePath = 
-                path.join('/', avatarImageBasePath, this.avatarName)
-        )
+        return this.avatarImagePath = path.join('/', avatarImageBasePath, this.avatarName)
     }
 })
 

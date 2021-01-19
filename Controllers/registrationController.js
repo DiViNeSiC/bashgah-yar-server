@@ -1,9 +1,10 @@
 const bcrypt = require('bcrypt')
-const User = require('../Models/User')
 const Gym = require('../Models/Gym')
+const User = require('../Models/User')
 const formCheck = require('../Handlers/FormChecks/formCheck')
 const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
 const userExistCheck = require('../Handlers/FormChecks/userExistCheck')
+const { registrationController: { errorMsgs, successMsgs } } = require('../Handlers/Constants/responseMessages')
 const { SITE_ADMIN_ROLE, GYM_ADMIN_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE, GYM_MANAGER_ROLE } = require('../Handlers/Constants/roles')
 
 exports.siteAdminRegistration = async (req, res) => {
@@ -11,7 +12,7 @@ exports.siteAdminRegistration = async (req, res) => {
     const { username, name, lastname, email, password, phoneNumber, registrationPassword } = req.body
 
     const passwordPassed = await bcrypt.compare(registrationPassword, process.env.ADMIN_REGISTRATION_PASSWORD)
-    if (!passwordPassed) throw '!رمز ورودی برای ثبت ادمین اشتباه است'
+    if (!passwordPassed) throw errorMsgs.wrongAdminPassword
 
     const formError = formCheck(username, name, lastname, email, password, phoneNumber, true)
     if (formError) throw formError
@@ -27,9 +28,9 @@ exports.siteAdminRegistration = async (req, res) => {
 
     try {
         await newSiteAdmin.save()
-        res.json({ message: `ثبت شد ${username} مدیر سایت جدید با نام کاربری` })
+        res.json({ message: `"${username}" :${successMsgs.successSiteAdmin}` })
     } catch {
-        res.status(500).json({ message: `ثبت مدیر سایت جدید موفقیت آمیز نبود` })
+        res.status(500).json({ message: errorMsgs.userRegisterError })
     }
 }
 
@@ -51,9 +52,9 @@ exports.gymAdminRegister = async (req, res) => {
 
     try {
         await newGymAdmin.save()
-        res.json({ message: `ثبت شد ${username} مدیر کل جدید با نام کاربری` })
+        res.json({ message: `"${username}" :${successMsgs.successGymAdmin}` })
     } catch {
-        res.status(500).json({ message: `ثبت مدیر کل جدید موفقیت آمیز نبود` })
+        res.status(500).json({ message: errorMsgs.userRegisterError })
     }
 }
 
@@ -71,9 +72,9 @@ exports.gymRegister = async (req, res) => {
         const { adminGyms } = admin
         const newGyms = [...adminGyms, newGym.id]
         await admin.updateOne({ adminGyms: newGyms })
-        res.json({ message: `ثبت شد ${name} باشگاه جدید با نام ` })
+        res.json({ message: `"${name}" :${successMsgs.successGymAccount}` })
     } catch (err) {
-        res.status(500).json({ message: `ثبت باشگاه جدید موفقیت آمیز نبود` })
+        res.status(500).json({ message: errorMsgs.gymRegisterError })
     }
 }
 
@@ -82,7 +83,7 @@ exports.managerRegister = async (req, res) => {
     const { username, name, lastname, gymId, email, password, phoneNumber } = req.body
 
     const gym = await Gym.findById(gymId)
-    if (!gym) throw 'باشگاه مشخص برای ایجاد حساب کاربری نیاز است'
+    if (!gym) throw errorMsgs.gymIdNeeded
     const formError = formCheck(username, name, lastname, email, password, phoneNumber, true)
     if (formError) throw formError
 
@@ -100,9 +101,9 @@ exports.managerRegister = async (req, res) => {
         const { managers } = gym
         const newManagers = [...managers, newManager.id]
         await gym.updateOne({ managers: newManagers })
-        res.json({ message: `ثبت شد ${username} مدیر باشگاه جدید با نام کاربری` })
+        res.json({ message: `"${username}" :${successMsgs.successGymManager}` })
     } catch {
-        res.status(500).json({ message: `ثبت مدیر باشگاه جدید موفقیت آمیز نبود` })
+        res.status(500).json({ message: errorMsgs.userRegisterError })
     }
 }
 
@@ -129,9 +130,9 @@ exports.coachRegister = async (req, res) => {
         const { coaches } = gym
         const newCoaches = [...coaches, newCoach.id]
         await gym.updateOne({ coaches: newCoaches })
-        res.json({ message: `ثبت شد ${username} مربی جدید با نام کاربری` })
+        res.json({ message: `"${username}" :${successMsgs.successGymCoach}` })
     } catch {
-        res.status(500).json({ message: `ثبت مربی جدید موفقیت آمیز نبود` })
+        res.status(500).json({ message: errorMsgs.userRegisterError })
     }
 }
 
@@ -158,8 +159,8 @@ exports.athleteRegister = async (req, res) => {
         const { athletes } = gym
         const newAthletes = [...athletes, newAthlete.id]
         await gym.updateOne({ athletes: newAthletes })
-        res.json({ message: `ثبت شد ${username} ورزشکار جدید با نام کاربری` })
+        res.json({ message: `"${username}" :${successMsgs.successGymAthlete}` })
     } catch {
-        res.status(500).json({ message: `ثبت ورزشکار جدید موفقیت آمیز نبود` })
+        res.status(500).json({ message: errorMsgs.userRegisterError })
     }
 }

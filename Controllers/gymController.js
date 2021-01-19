@@ -1,9 +1,11 @@
 const path = require('path')
 const Gym = require('../Models/Gym')
-const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
-const deleteGymPicFiles = require('../Handlers/FileHandlers/deleteGymPicFiles')
+const User = require('../Models/User')
 const deleteManyUsers = require('../Handlers/deleteManyUsers')
 const { GYM_ADMIN_ROLE } = require('../Handlers/Constants/roles')
+const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
+const deleteGymPicFiles = require('../Handlers/FileHandlers/deleteGymPicFiles')
+const { gymController: { successMsgs, errorMsgs } } = require('../Handlers/Constants/responseMessages')
 
 exports.getGlobalGyms = async (req, res) => {
     const gyms = await Gym.find()
@@ -12,11 +14,12 @@ exports.getGlobalGyms = async (req, res) => {
 
 exports.getAdminGyms = async (req, res) => {
     const { adminId } = req.params
-    if (req.user.role === GYM_ADMIN_ROLE && req.user.id !== adminId)
-        throw 'شما نمی توانید به این بخش دسترسی داشته باشید'
-    const gyms = await Gym.find({ admin: adminId }).populate('admin').exec()
-    if (!gyms || !gyms.length) throw 'باشگاهی یافت نشد'
-    res.json({ gyms, adminUsername: gyms[0].admin.username })
+    if (req.user.role === GYM_ADMIN_ROLE && req.user.id !== adminId) throw errorMsgs.accessNotAllowed
+
+    const admin = await User.findById(adminId)
+    const gyms = await Gym.find({ admin: adminId })
+    if (!gyms || !gyms.length) throw errorMsgs.gymNotFound
+    res.json({ admin, gyms })
 }
 
 exports.getGymStaff = async (req, res) => {
@@ -24,27 +27,27 @@ exports.getGymStaff = async (req, res) => {
     const gym = await Gym.findById(gymId)
         .populate('admin').populate('managers')
         .populate('coaches').populate('athletes').exec()
-    if (!gym) throw 'باشگاهی با این مشخصات وجود ندارد'
+    if (!gym) throw errorMsgs.gymNotFound
 
     res.json({ 
         gymName: gym.name, staff: {
             admin: gym.admin, managers: gym.managers,
             coaches: gym.coaches, athletes: gym.athletes,
-        } 
+        }
     })
 }
 
 exports.getGymById = async (req, res) => {
     const { gymId } = req.params
     const gym = await Gym.findById(gymId).populate('admin').exec()
-    if (!gym) throw 'باشگاهی با این مشخصات وجود ندارد'
+    if (!gym) throw errorMsgs.gymNotFound
     res.json({ gym })
 }
 
 exports.getGymByIdForEdit = async (req, res) => {
     const { gymId } = req.params
     const gym = await Gym.findById(gymId)
-    if (!gym) throw 'باشگاهی با این مشخصات وجود ندارد'
+    if (!gym) throw errorMsgs.gymNotFound
     res.json({ gym })
 }
 
@@ -58,30 +61,28 @@ exports.editInfo = async (req, res) => {
 
     try {
         await gym.updateOne({ name, city, capacity, address, phoneNumber })
-        res.json({ message: 'مشخصات باشگاه شما بروز گردید' })
+        res.json({ message: successMsgs.gymInfoUpdated })
     } catch {
-        res.status(500).json({ message: 'خطا در بروزرسانی مشخصات باشگاه شما' })
+        res.status(500).json({ message: errorMsgs.gymUpdateError })
     }
 }
 
 exports.addPicture = async (req, res) => {
     const { gymId } = req.params
     const newGymPic = req.file != null ? req.file.filename : ''
-    if (!newGymPic) throw 'عکسی دریافت نشد'
+    if (!newGymPic) throw errorMsgs.noPicUploaded
 
     const gym = await Gym.findById(gymId)
     const { gymImageNames } = gym
     const newImages = [...gymImageNames, newGymPic]
-    if (newImages.length > 12) 
-        throw 'شما نمیتوانید بیشتر از دوازده تا عکس برای هر باشگاه بگذارید'
-
+    if (newImages.length > 12) throw errorMsgs.gymPicLimitReached
     const newImagePaths = newImages.map(image => path.join('/', Gym.gymImageBasePath, image))
 
     try {
         await gym.updateOne({ gymImageNames: newImages, gymImagePaths: newImagePaths })
-        res.json({ message: 'عکس های باشگاه بروزرسانی گردید' })
+        res.json({ message: successMsgs.gymPicsUpdated })
     } catch {
-        res.status(500).json({ message: 'خطا در بروزرسانی تصاویر باشگاه شما' })
+        res.status(500).json({ message: errorMsgs.gymUpdateError })
     }
 }
 
@@ -99,9 +100,9 @@ exports.deleteOnePicture = async (req, res) => {
 
     try {
         await gym.updateOne({ gymImageNames: newImages, gymImagePaths: newImagePaths })
-        res.json({ message: 'عکس های باشگاه بروزرسانی گردید' })
+        res.json({ message: successMsgs.gymPicsUpdated })
     } catch {
-        res.status(500).json({ message: 'خطا در بروزرسانی تصاویر باشگاه شما' })
+        res.status(500).json({ message: errorMsgs.gymUpdateError })
     }
 }
 
@@ -113,9 +114,9 @@ exports.deleteAllPictures = async (req, res) => {
 
     try {
         await gym.updateOne({ gymImageNames: [], gymImagePaths: [] })
-        res.json({ message: 'عکس های باشگاه بروزرسانی گردید' })
+        res.json({ message: successMsgs.gymPicsUpdated })
     } catch {
-        res.status(500).json({ message: 'خطا در بروزرسانی تصاویر باشگاه شما' })
+        res.status(500).json({ message: errorMsgs.gymUpdateError })
     }
 }
 
@@ -132,8 +133,8 @@ exports.deleteGymAccount = async (req, res) => {
 
     try {
         await gym.deleteOne()
-        res.json({ message: 'باشگاه با موفقیت پاک شد' })
+        res.json({ message: successMsgs.deleteGymAccountSuccess })
     } catch {
-        res.status(500).json({ message: 'خطا در پاک کردن باشگاه شما' })
+        res.status(500).json({ message: errorMsgs.deleteGymAccountError })
     }
 }

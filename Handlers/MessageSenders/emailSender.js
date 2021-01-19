@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer')
-const { activeAcc, changePass, deleteAcc, forgotPass } = require('../Constants/emailContents')
-const { EMAIL_ACTIVATION, RESET_PASSWORD, FORGOT_PASSWORD, DELETE_ACCOUNT } = require('../Constants/emailMethods')
+const { activeAcc, changePass, forgotPass } = require('../Constants/emailTemplates')
+const { emailMethods: { FORGOT_PASSWORD, EMAIL_ACTIVATION, RESET_PASSWORD } } = require('../Constants/sendersMethods')
 
 module.exports = async (userEmail, token, method) => {
     const { SITE_MANAGER_EMAIL: user, SITE_MANAGER_PASSWORD: pass, CLIENT_URL: clientUrl } = process.env
@@ -25,9 +25,6 @@ function generateEmailContent(clientUrl, token, method) {
             html: forgotPass(clientUrl, token),
             subject: "📣 آیا رمز عبور خود را فراموش کرده اید؟ 📣"
         }
-        case DELETE_ACCOUNT: return {
-            html: deleteAcc(clientUrl, token),
-            subject: "×× پاک کردن حساب کاربری ××"
-        }
+        default: return { html: null, subject: null }
     }
 }
