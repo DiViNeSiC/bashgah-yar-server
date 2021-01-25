@@ -1,15 +1,53 @@
 const path = require('path')
+const jwt = require('jsonwebtoken')
 const Gym = require('../Models/Gym')
 const User = require('../Models/User')
 const deleteManyUsers = require('../Handlers/deleteManyUsers')
 const { GYM_ADMIN_ROLE } = require('../Handlers/Constants/roles')
+const getTimeDifference = require('../Handlers/getTimeDifference')
 const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
 const deleteGymPicFiles = require('../Handlers/FileHandlers/deleteGymPicFiles')
 const { gymController: { successMsgs, errorMsgs } } = require('../Handlers/Constants/responseMessages')
 
+exports.banGym = async (req, res) => {
+    const { gymId } = req.params
+    const gym = await Gym.findById(gymId)
+    if (!gym) throw errorMsgs.gymNotFound
+    if (gym.isBanned) throw errorMsgs.gymAlreadyBanned
+
+    try {
+        await gym.updateOne({ isBanned: true })
+        res.json({ message: successMsgs.banGymSuccess })
+    } catch (err) {
+        res.status(500).json({ message: errorMsgs.banGymError })
+    }
+}
+
+exports.unBanGym = async (req, res) => {
+    const { gymId } = req.params
+    const gym = await Gym.findById(gymId)
+    if (!gym) throw errorMsgs.gymNotFound
+    if (!gym.isBanned) throw errorMsgs.gymAlreadyUnBanned
+
+    try {
+        await gym.updateOne({ isBanned: false })
+        res.json({ message: successMsgs.unBanGymSuccess })
+    } catch (err) {
+        res.status(500).json({ message: errorMsgs.unBanGymError })
+    }
+}
+
 exports.getGlobalGyms = async (req, res) => {
-    const gyms = await Gym.find()
-    res.json({ gyms })
+    const allGyms = await Gym.find()
+    const filteredGyms = allGyms.filter(gym => {
+        const { accessExpireDate } = gym
+        const { mainDifference } = getTimeDifference(accessExpireDate)
+
+        if (mainDifference < 0) return
+        return gym
+    })
+
+    res.json({ gyms: filteredGyms })
 }
 
 exports.getAdminGyms = async (req, res) => {
@@ -39,8 +77,14 @@ exports.getGymStaff = async (req, res) => {
 
 exports.getGymById = async (req, res) => {
     const { gymId } = req.params
+    const loggedUser = await User.findById(req.user.id)
     const gym = await Gym.findById(gymId).populate('admin').exec()
+
     if (!gym) throw errorMsgs.gymNotFound
+    if (gym.id.toString() === loggedUser.gym.toString()) return res.json({ gym })
+    const { mainDifference } = getTimeDifference(gym.accessExpireDate)
+    if (mainDifference < 0) throw errorMsgs.gymIsNotAccessible
+    
     res.json({ gym })
 }
 
@@ -64,6 +108,49 @@ exports.editInfo = async (req, res) => {
         res.json({ message: successMsgs.gymInfoUpdated })
     } catch {
         res.status(500).json({ message: errorMsgs.gymUpdateError })
+    }
+}
+
+exports.changeHolidays = async (req, res) => {
+    const { gymId } = req.params
+    const { newHolidays } = req.body
+    if (newHolidays.length > 7) throw errorMsgs.holidaysLengthReached
+
+    try {
+        await Gym.findByIdAndUpdate(gymId, { holidays: newHolidays })
+        res.json({ message: successMsgs.gymHolidaysUpdateSuccess })
+    } catch {
+        res.status(500).json({ message: errorMsgs.gymHolidaysUpdateError })
+    }
+}
+
+//FIXME: WE NEED TO FIX THE PAYMENT TOKEN!!!!!
+exports.generatePaymentToken = async (req, res) => {
+    const { gymId } = req.params
+    const gym = await Gym.findById(gymId)
+    if (!gym) throw errorMsgs.gymNotFound
+    const paymentToken = await jwt.sign({ gymId: gym.id }, process.env.JWT_GYM_ACCESS_SECRET, { expiresIn: '30m' })
+    
+    res.json({ paymentToken })
+}
+
+//FIXME: WE NEED TO FIX THE PAYMENT TOKEN!!!!!
+exports.setAccessToken = async (req, res) => {
+    const { paymentToken } = req.params
+    try {
+        const { gymId } = await jwt.verify(paymentToken, process.env.JWT_GYM_ACCESS_SECRET)
+        const gym = await Gym.findById(gymId)
+        const payload = { gymId: gym.id, gymAdmin: gym.admin }
+        const accessToken = await jwt.sign(payload, process.env.JWT_GYM_ACCESS_SECRET, { expiresIn: '30d' })
+
+        const currentDate = new Date()
+        const expireDaysInMilliseconds = 30 * (1000 * 60 * 60 * 24)
+        const accessExpireDate = new Date(currentDate.getTime() + expireDaysInMilliseconds)
+
+        await gym.updateOne({ accessToken, accessExpireDate, lastPaymentDate: currentDate })
+        res.json({ message: successMsgs.setAccessTokenSuccess })
+    } catch (err) {
+        res.status(500).json({ message: errorMsgs.setAccessTokenError })
     }
 }
 

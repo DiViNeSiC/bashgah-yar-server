@@ -1,8 +1,11 @@
-const User = require('../Models/User')
 const Gym = require('../Models/Gym')
+const User = require('../Models/User')
+const Schedule = require('../Models/Schedule')
 const ObjectId = require('mongoose').Types.ObjectId
+const { ATHLETE_ROLE } = require('../Handlers/Constants/roles')
 const { checksMiddleware: errorMsgs } = require('../Handlers/Constants/responseMessages')
-const { ATHLETE_ROLE, GYM_COACH_ROLE, GYM_MANAGER_ROLE, GYM_ADMIN_ROLE, SITE_ADMIN_ROLE } = require('../Handlers/Constants/roles')
+const { BAN, DELETE, GET, COMMUNICATION, FEEDBACK, SCHEDULES } = require('../Handlers/Constants/checkMethods')
+const { checkAccessForUser, checkAccessForGym, checkGymAccessToken } = require('../Handlers/checkAccesses')
 
 exports.emailExistCheck = async (req, res, next) => {
     const user = await User.findById(req.user.id)
@@ -40,23 +43,21 @@ exports.checkIsNotHimSelf = async (req, res, next) => {
 
 exports.checkGymAccess = async (req, res, next) => {
     const { gymId } = req.params
-    const loggedUser = await User.findById(req.user.id)
-    const loggedUserIsSiteAdmin = loggedUser.role === SITE_ADMIN_ROLE
-    const loggedUserIsGymAdmin = loggedUser.role === GYM_ADMIN_ROLE
-    const loggedUserIsGymStaff = loggedUser.role === GYM_MANAGER_ROLE || 
-        loggedUser.role === GYM_COACH_ROLE || loggedUser.role === ATHLETE_ROLE
+    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec()
 
-    if (loggedUserIsSiteAdmin) return next()
+    const { error, status } = checkAccessForGym(gymId, loggedUser)
+    if (error) return res.status(status).json({ message: error })
+    next()
+}
 
-    if (loggedUserIsGymAdmin) {
-        const { adminGyms } = loggedUser
-        if (!adminGyms.length) return res.status(404).json({ message: errorMsgs.gymNotFound })
-        if (!adminGyms.includes(gymId)) return res.status(403).json({ message: errorMsgs.gymAccessNotAllowed })
-    }
+exports.checkUserAccessForGet = async (req, res, next) => {
+    const { userId } = req.params
+    const selectedUser = await User.findById(userId)
+    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec()
+    if (!selectedUser) return res.status(404).json({ message: errorMsgs.userNotFound })
 
-    if (loggedUserIsGymStaff && loggedUser.gym !== gymId) 
-        return res.status(403).json({ message: errorMsgs.gymAccessNotAllowed })
-    
+    const { error, status } = checkAccessForUser(selectedUser, loggedUser, GET)
+    if (error) return res.status(status).json({ message: error })
     next()
 }
 
@@ -64,26 +65,90 @@ exports.checkUserAccessForDelete = async (req, res, next) => {
     const { userId } = req.params
     const selectedUser = await User.findById(userId)
     if (!selectedUser) return res.status(404).json({ message: errorMsgs.userNotFound })
-    if (selectedUser.role === SITE_ADMIN_ROLE || selectedUser.role === GYM_ADMIN_ROLE) 
-        return res.status(403).json({ message: errorMsgs.userDeleteAccessNotAllowed })
-
-    const selectedUserGym = await Gym.findById(selectedUser.gym)
     const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec()
-
-    if (loggedUser.role === GYM_ADMIN_ROLE) {
-        const { adminGyms } = loggedUser
-        if (!adminGyms.length) return res.status(404).json({ message: errorMsgs.gymsNeeded })
-        const staffArray = [].concat(...adminGyms.map(gym => [...gym.managers, ...gym.coaches, ...gym.athletes]))
-        const allStaff = staffArray.map(staff => staff.toString())
-        if (!allStaff.includes(userId)) return res.status(403).json({ message: errorMsgs.userDeleteAccessNotAllowed })
-    }
-
-    if (loggedUser.role === GYM_MANAGER_ROLE) {
-        if (selectedUser.role === GYM_MANAGER_ROLE) return res.status(403).json({ message: errorMsgs.userDeleteAccessNotAllowed })
-        if (selectedUser.gym.toString() !== loggedUser.gym.toString()) return res.status(403).json({ message: errorMsgs.userDeleteAccessNotAllowed })
-    }
+    
+    const { error, status } = checkAccessForUser(selectedUser, loggedUser, DELETE)
+    if (error) return res.status(status).json({ message: error })
+    
+    const selectedUserGym = await Gym.findById(selectedUser.gym)
 
     req.selectedUser = selectedUser
     req.selectedUserGym = selectedUserGym
+    next()
+}
+
+exports.checkAccessForBanStatus = async (req, res, next) => {
+    const { userId } = req.params
+    const selectedUser = await User.findById(userId)
+    if (!selectedUser) return res.status(404).json({ message: errorMsgs.userNotFound })
+    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec()
+
+    const { error, status } = checkAccessForUser(selectedUser, loggedUser, BAN)
+    if (error) return res.status(status).json({ message: error })
+    next()
+}
+
+exports.checkAccessForCommunication = async (req, res, next) => {
+    const { receivers, communicationType } = req
+    if (communicationType === FEEDBACK) return next()
+    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec()
+
+    receivers.forEach(receiver => {
+        const { error, status } = checkAccessForUser(receiver, loggedUser, COMMUNICATION)
+        if (error) return res.status(status).json({ message: error })
+    })
+
+    next()
+}
+
+exports.checkAccessForSchedules = async (req, res, next) => {
+    const { athleteId, scheduleId } = req.params
+    const loggedUser = await User.findById(req.user.id)
+    if (athleteId) {
+        const athlete = await User.findOne({ _id: athleteId, role: ATHLETE_ROLE })
+            .populate('gym').exec()
+        
+        if (!athlete) return res.status(404).json({ message: errorMsgs.userNotFound })
+        const { error, status } = checkAccessForUser(athlete, loggedUser, SCHEDULES)
+        if (error) return res.status(status).json({ message: error })
+        req.athlete = athlete
+    }
+    if (scheduleId) {
+        const schedule = await Schedule.findById(scheduleId)
+            .populate('coach').populate('athlete').populate('movesList').exec()
+
+        if (!schedule) return res.status(404).json({ message: errorMsgs.scheduleNotFound })
+        const { error, status } = checkAccessForUser(schedule.athlete, loggedUser, SCHEDULES)
+        if (error) return res.status(status).json({ message: error })
+        req.schedule = schedule
+    }
+
+    next()
+}
+
+exports.gymEntryCheck = async (req, res) => {
+    const { gymId: gymIdInBody } = req.body
+    const { gymId: gymIdInParams, userId } = req.params
+    const gymId = gymIdInBody ? gymIdInBody : gymIdInParams ? gymIdInParams : null
+    if (gymId) {
+        const { error, status } = checkGymAccessToken(gymId)
+        if (error) return res.status(status).json({ message: error })
+    }
+
+    const loggedUser = await User.findById(req.user.id)
+    if (loggedUser.gym) {
+        const { error, status } = checkGymAccessToken(loggedUser.gym)
+        if (error) return res.status(status).json({ message: error })
+    }
+
+    if (userId) {
+        const selectedUser = await User.findById(userId)
+        if (!selectedUser) return res.status(404).json({ message: errorMsgs.userNotFound })
+        if (selectedUser.gym) {
+            const { error, status } = checkGymAccessToken(selectedUser.gym)
+            if (error) return res.status(status).json({ message: error })
+        }
+    }
+
     next()
 }

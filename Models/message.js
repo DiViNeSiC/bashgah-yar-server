@@ -18,6 +18,10 @@ const messageSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    automatedMessage: {
+        type: Boolean,
+        default: false
+    },
     time: {
         type: Date,
         default: Date.now

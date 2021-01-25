@@ -1,5 +1,6 @@
 const Message = require('../Models/Message')
-const { communicationController: { errorMsgs, successMsgs, warnMsgs } } = require('../Handlers/Constants/responseMessages')
+const updateUserReadMessages = require('../Handlers/updateUserReadMessages')
+const { communicationController: { errorMsgs, successMsgs } } = require('../Handlers/Constants/responseMessages')
 
 exports.getMessagesForReceiver = async (req, res) => {
     const messages = await Message.find({ receiver: req.user.id })
@@ -12,41 +13,57 @@ exports.getMessagesForSender = async (req, res) => {
 }
 
 exports.sendMessage = async (req, res) => {
+    const { receivers } = req
     const { text } = req.body
-    const { userId } = req.params
     const fileName = req.file != null ? req.file.filename : ''
     if (!text && !fileName) throw errorMsgs.noFileOrTextFound
 
-    const selectedUser = await User.findById(userId)
-    if (!selectedUser) throw errorMsgs.userNotFound
-    
-    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec()
-
-    if (loggedUser.role === GYM_ADMIN_ROLE) {
-        const { adminGyms } = loggedUser
-        if (!adminGyms.length) throw warnMsgs.youDoNotHaveAnyGyms
-
-        const staffArray = [].concat(...adminGyms.map(gym => [...gym.managers, ...gym.coaches, ...gym.athletes]))
-        const allStaff = staffArray.map(staff => staff.toString())
-
-        if (!allStaff.includes(selectedUser.id)) throw errorMsgs.userInfoAccessNotAllowed
-    }
-
-    const loggedUserIsGymStaff = loggedUser.role === GYM_MANAGER_ROLE || 
-        loggedUser.role === GYM_COACH_ROLE || loggedUser.role === ATHLETE_ROLE
-
-    if (loggedUserIsGymStaff && selectedUser.gym.id !== loggedUser.gym.toString()) 
-        throw errorMsgs.userInfoAccessNotAllowed
-
-    const newMessage = new Message({
-        text, file: fileName, sender: req.user.id, receiver: userId
+    receivers.forEach(async (receiver, index) => {
+        const newMessage = new Message({
+            text, file: fileName, sender: req.user.id, receiver: receiver.id
+        })
+        
+        try {
+            await newMessage.save()
+            await updateUserReadMessages(null, receiver)
+            if (index === receivers.length - 1) res.json({ message: successMsgs.sendMessageSuccess })
+        } catch (err) {
+            res.status(500).json({ message: errorMsgs.sendMessageError })
+        }
     })
+}
+
+exports.markAsRead = async (req, res) => {
+    const { messageId } = req.params
+    const message = await Message.findById(messageId)
+
+    if (!message) throw errorMsgs.messageNotFound
+    if (message.readCheck) throw errorMsgs.messageAlreadyMarkedAsRead
+    if (message.receiver.toString() !== req.user.id) throw errorMsgs.markMessageNotAllowed
 
     try {
-        await newMessage.save()
-        res.json({ message: successMsgs.sendMessageSuccess })
+        await message.updateOne({ readCheck: true })
+        await updateUserReadMessages(message.receiver)
+        res.json({ message: successMsgs.messageMarkedAsRead })
     } catch (err) {
-        res.status(500).json({ message: errorMsgs.sendMessageError })
+        res.status(500).json({ message: errorMsgs.markAsReadError })
+    }
+}
+
+exports.unMarkAsRead = async (req, res) => {
+    const { messageId } = req.params
+    const message = await Message.findById(messageId)
+    
+    if (!message) throw errorMsgs.messageNotFound
+    if (!message.readCheck) throw errorMsgs.messageAlreadyUnMarkedAsRead
+    if (message.receiver.toString() !== req.user.id) throw errorMsgs.unMarkMessageNotAllowed
+
+    try {
+        await message.updateOne({ readCheck: false })
+        await updateUserReadMessages(message.receiver)
+        res.json({ message: successMsgs.messageUnMarkedAsRead })
+    } catch (err) {
+        res.status(500).json({ message: errorMsgs.unMarkAsReadError })
     }
 }
 
@@ -54,6 +71,8 @@ exports.editMessage = async (req, res) => {
     const { newText } = req.body
     const { messageId } = req.params
     const message = await Message.findById(messageId)
+
+    if (!message) throw errorMsgs.messageNotFound
     if (!message.file && !newText) throw errorMsgs.emptyMessageText
     if (message.sender.toString() !== req.user.id) throw errorMsgs.editMessageNotAllowed
 
@@ -65,13 +84,32 @@ exports.editMessage = async (req, res) => {
     }
 }
 
-exports.deleteMessage = async (req, res) => {
+exports.deleteMessageForAll = async (req, res) => {
     const { messageId } = req.params
     const message = await Message.findById(messageId)
+
+    if (!message) throw errorMsgs.messageNotFound
     if (message.sender.toString() !== req.user.id) throw errorMsgs.deleteMessageNotAllowed
 
     try {
         await message.deleteOne()
+        await updateUserReadMessages(message.receiver)
+        res.json({ message: successMsgs.deleteMessageSuccess })
+    } catch (err) {
+        res.status(500).json({ message: errorMsgs.deleteMessageError })
+    }
+}
+
+exports.deleteMessageForReceiver = async (req, res) => {
+    const { messageId } = req.params
+    const message = await Message.findById(messageId)
+
+    if (!message) throw errorMsgs.messageNotFound
+    if (message.receiver.toString() !== req.user.id) throw errorMsgs.deleteMessageNotAllowed
+
+    try {
+        await message.updateOne({ receiver: null })
+        await updateUserReadMessages(message.receiver)
         res.json({ message: successMsgs.deleteMessageSuccess })
     } catch (err) {
         res.status(500).json({ message: errorMsgs.deleteMessageError })

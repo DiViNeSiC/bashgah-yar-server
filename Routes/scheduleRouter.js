@@ -1,28 +1,24 @@
 const router = require('express').Router()
 const { catchErrors } = require('../Handlers/errorHandler')
-const { authRole } = require('../Middlewares/authenticates')
-const { checkParamId } = require('../Middlewares/checks')
+const { auth, authRole } = require('../Middlewares/authenticates')
 const { sportingMoveGifUpload } = require('../Middlewares/uploads')
 const { GYM_COACH_ROLE, ATHLETE_ROLE, SITE_ADMIN_ROLE } = require('../Handlers/Constants/roles')
+const { checkParamId, checkAccessForSchedules, gymEntryCheck } = require('../Middlewares/checks')
 const { 
-    createNewMove,
-    deleteMoveById,
-    getScheduleById,
-    createNewSchedule,
-    deleteScheduleById,
-    checkCompletedMoves,
-    getAthleteSchedules,
+    getAthleteSchedules, deleteMoveById, getScheduleById, getAllSportMoves,
+    createNewMove, createNewSchedule, deleteScheduleById, checkCompletedMoves,
 } = require('../Controllers/scheduleController')
 
-router.get('/:scheduleId', checkParamId, authRole(GYM_COACH_ROLE, ATHLETE_ROLE), catchErrors(getScheduleById))
-router.get('/athlete/:athleteId', checkParamId, authRole(GYM_COACH_ROLE, ATHLETE_ROLE), catchErrors(getAthleteSchedules))
+router.get('/moves', catchErrors(getAllSportMoves))
+router.get('/:scheduleId', checkParamId, auth, authRole(GYM_COACH_ROLE, ATHLETE_ROLE), checkAccessForSchedules, catchErrors(getScheduleById))
+router.get('/athlete/:athleteId', checkParamId, auth, authRole(GYM_COACH_ROLE, ATHLETE_ROLE), checkAccessForSchedules, catchErrors(getAthleteSchedules))
 
-router.post('/move', authRole(SITE_ADMIN_ROLE), sportingMoveGifUpload.single('moveGif'), catchErrors(createNewMove))
-router.post('/schedule/:athleteId', checkParamId, authRole(GYM_COACH_ROLE), catchErrors(createNewSchedule))
+router.post('/move', auth, authRole(SITE_ADMIN_ROLE), sportingMoveGifUpload.single('moveGif'), catchErrors(createNewMove))
+router.post('/schedule/:athleteId', checkParamId, auth, authRole(GYM_COACH_ROLE), gymEntryCheck, checkAccessForSchedules, catchErrors(createNewSchedule))
 
-router.put('/check-moves/:scheduleId', checkParamId, authRole(ATHLETE_ROLE), catchErrors(checkCompletedMoves))
+router.put('/check-moves/:scheduleId', checkParamId, auth, authRole(ATHLETE_ROLE), catchErrors(checkCompletedMoves))
 
-router.delete('/move/:moveId', checkParamId, authRole(SITE_ADMIN_ROLE), catchErrors(deleteMoveById))
-router.delete('/schedule/:scheduleId', checkParamId, authRole(GYM_COACH_ROLE), catchErrors(deleteScheduleById))
+router.delete('/move/:moveId', checkParamId, auth, authRole(SITE_ADMIN_ROLE), catchErrors(deleteMoveById))
+router.delete('/schedule/:scheduleId', checkParamId, auth, authRole(GYM_COACH_ROLE), gymEntryCheck, checkAccessForSchedules, catchErrors(deleteScheduleById))
 
 module.exports = router

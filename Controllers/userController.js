@@ -6,8 +6,8 @@ const sendEmail = require('../Handlers/MessageSenders/emailSender')
 const userExistCheck = require('../Handlers/FormChecks/userExistCheck')
 const { emailMethods } = require('../Handlers/Constants/sendersMethods')
 const deleteAvatarFile = require('../Handlers/FileHandlers/deleteAvatarFile')
+const { GYM_ADMIN_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE, GYM_MANAGER_ROLE } = require('../Handlers/Constants/roles')
 const { userController: { errorMsgs, successMsgs, warnMsgs } } = require('../Handlers/Constants/responseMessages')
-const { SITE_ADMIN_ROLE, GYM_ADMIN_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE, GYM_MANAGER_ROLE } = require('../Handlers/Constants/roles')
 
 exports.getAllGymAdmins = async (req, res) => {
     const gymAdmins = await User.find({ role: GYM_ADMIN_ROLE })
@@ -34,30 +34,38 @@ exports.getLoggedUser = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
     const { userId } = req.params
-    const selectedUser = await User.findById(userId).populate('adminGyms').populate('gym').exec()
-    if (!selectedUser) throw errorMsgs.userNotFound
-    if (selectedUser.role === SITE_ADMIN_ROLE) throw errorMsgs.userInfoAccessNotAllowed
+    const user = await User.findById(userId).populate('adminGyms').populate('gym').exec()
+    res.json({ user })
+}
 
-    const loggedUser = await User.findById(req.user.id).populate('adminGyms').exec() 
-    if (loggedUser.role === SITE_ADMIN_ROLE) return res.json({ user: selectedUser })
+exports.markAthletesSession = async (req, res) => {
+    const { userId } = req.params
+    const athlete = await User.findOne({ _id: userId, role: ATHLETE_ROLE })
+    if (!athlete) throw errorMsgs.athleteNotFound
+    if (athlete.sessionsRemaining < 1) throw errorMsgs.athleteDoNotHaveRemainingSessions
+    const newData = { lastPresentSessionDate: Date.now(), sessionsRemaining: athlete.sessionsRemaining - 1 }
 
-    if (loggedUser.role === GYM_ADMIN_ROLE) {
-        const { adminGyms } = loggedUser
-        if (!adminGyms.length) throw warnMsgs.youDoNotHaveAnyGyms
-
-        const staffArray = [].concat(...adminGyms.map(gym => [...gym.managers, ...gym.coaches, ...gym.athletes]))
-        const allStaff = staffArray.map(staff => staff.toString())
-
-        if (!allStaff.includes(selectedUser.id)) throw errorMsgs.userInfoAccessNotAllowed
+    try {
+        await athlete.updateOne(newData)
+        res.json({ message: successMsgs.markSessionSuccess })
+    } catch (err) {
+        res.status(500).json({ message: successMsgs.markSessionError })
     }
+}
 
-    const loggedUserIsGymStaff = loggedUser.role === GYM_MANAGER_ROLE || 
-        loggedUser.role === GYM_COACH_ROLE || loggedUser.role === ATHLETE_ROLE
+exports.editAthletesSessions = async (req, res) => {
+    const { userId } = req.params
+    const { newSessionNumber } = req.body
+    const athlete = await User.findOne({ _id: userId, role: ATHLETE_ROLE })
+    if (!athlete) throw errorMsgs.athleteNotFound
+    if (newSessionNumber < 0) throw errorMsgs.sessionNumberInvalid
 
-    if (loggedUserIsGymStaff && selectedUser.gym.id !== loggedUser.gym.toString()) 
-        throw errorMsgs.userInfoAccessNotAllowed
-
-    res.json({ user: selectedUser })
+    try {
+        await athlete.updateOne({ sessionsRemaining: newSessionNumber })
+        res.json({ message: successMsgs.editSessionSuccess })
+    } catch (err) {
+        res.status(500).json({ message: successMsgs.editSessionError })
+    }
 }
 
 exports.updateAccountCredentials = async (req, res) => {
@@ -144,8 +152,8 @@ exports.deleteAvatar = async (req, res) => {
 
 exports.changePasswordConfirm = async (req, res) => {
     try {
-        const { changePasswordToken } = req.params
         const { newPassword } = req.body
+        const { changePasswordToken } = req.params
         const payload = await jwt.verify(changePasswordToken, process.env.JWT_RESET_PASS_SECRET)
 
         const user = await User.findById(payload.userId)
@@ -155,6 +163,34 @@ exports.changePasswordConfirm = async (req, res) => {
     } catch (err) {
         if (err.message === errorMsgs.jwtExpired) throw errorMsgs.changePasswordTimeExpired
         res.status(500).json({ message: errorMsgs.changePasswordError })
+    }
+}
+
+exports.banUser = async (req, res) => {
+    const { userId } = req.params
+    const user = await User.findById(userId)
+    if (!user) throw errorMsgs.userNotFound
+    if (user.isBanned) throw errorMsgs.userAlreadyBanned
+
+    try {
+        await user.updateOne({ isBanned: true, entryToken: null, refreshToken: null, confirmationToken: null })
+        res.json({ message: successMsgs.banUserSuccess })
+    } catch (err) {
+        res.status(500).json({ message: errorMsgs.banUserError })
+    }
+}
+
+exports.unBanUser = async (req, res) => {
+    const { userId } = req.params
+    const user = await User.findById(userId)
+    if (!user) throw errorMsgs.userNotFound
+    if (!user.isBanned) throw errorMsgs.userAlreadyNotBanned
+
+    try {
+        await user.updateOne({ isBanned: false })
+        res.json({ message: successMsgs.unBanUserSuccess })
+    } catch (err) {
+        res.status(500).json({ message: errorMsgs.unBanUserError })
     }
 }
 

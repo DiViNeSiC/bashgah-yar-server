@@ -46,6 +46,25 @@ const gymSchema = new mongoose.Schema({
         type: String,
         required: 'Phone Number Is Required'
     },
+    holidays: {
+        type: Array,
+        maxlength: 7,
+        default: []
+    },
+    accessToken: {
+        data: String,
+        default: ''
+    },
+    accessExpireDate: {
+        type: Date,
+    },
+    lastPaymentDate: {
+        type: Date,
+    },
+    isBanned: {
+        type: Boolean,
+        default: false
+    },
     gymImageNames: {
         type: Array,
         maxlength: 12,

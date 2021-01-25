@@ -5,7 +5,7 @@ const formCheck = require('../Handlers/FormChecks/formCheck')
 const gymFormCheck = require('../Handlers/FormChecks/gymFormCheck')
 const userExistCheck = require('../Handlers/FormChecks/userExistCheck')
 const { registrationController: { errorMsgs, successMsgs } } = require('../Handlers/Constants/responseMessages')
-const { SITE_ADMIN_ROLE, GYM_ADMIN_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE, GYM_MANAGER_ROLE } = require('../Handlers/Constants/roles')
+const { SITE_ADMIN_ROLE, GYM_ADMIN_ROLE, GYM_COACH_ROLE, ATHLETE_ROLE, GYM_MANAGER_ROLE, SITE_MEDIC_ROLE, SITE_SUPPORT_ROLE } = require('../Handlers/Constants/roles')
 
 exports.siteAdminRegistration = async (req, res) => {
     const avatarName = req.file != null ? req.file.filename : ''
@@ -29,6 +29,60 @@ exports.siteAdminRegistration = async (req, res) => {
     try {
         await newSiteAdmin.save()
         res.json({ message: `"${username}" :${successMsgs.successSiteAdmin}` })
+    } catch {
+        res.status(500).json({ message: errorMsgs.userRegisterError })
+    }
+}
+
+exports.siteSupportRegistration = async (req, res) => {
+    const avatarName = req.file != null ? req.file.filename : ''
+    const { username, name, lastname, email, password, phoneNumber, registrationPassword } = req.body
+
+    const passwordPassed = await bcrypt.compare(registrationPassword, process.env.ADMIN_REGISTRATION_PASSWORD)
+    if (!passwordPassed) throw errorMsgs.wrongAdminPassword
+
+    const formError = formCheck(username, name, lastname, email, password, phoneNumber, true)
+    if (formError) throw formError
+    
+    const userExist = await userExistCheck(username, email, phoneNumber)
+    if (userExist) throw userExist
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const newSiteSupport = new User({
+        role: SITE_SUPPORT_ROLE, username, name, lastname,
+        password: hashedPassword, email, phoneNumber, avatarName,
+    })
+
+    try {
+        await newSiteSupport.save()
+        res.json({ message: `"${username}" :${successMsgs.successSiteSupport}` })
+    } catch {
+        res.status(500).json({ message: errorMsgs.userRegisterError })
+    }
+}
+
+exports.siteMedicRegistration = async (req, res) => {
+    const avatarName = req.file != null ? req.file.filename : ''
+    const { username, name, lastname, email, password, phoneNumber, registrationPassword } = req.body
+
+    const passwordPassed = await bcrypt.compare(registrationPassword, process.env.ADMIN_REGISTRATION_PASSWORD)
+    if (!passwordPassed) throw errorMsgs.wrongAdminPassword
+
+    const formError = formCheck(username, name, lastname, email, password, phoneNumber, true)
+    if (formError) throw formError
+    
+    const userExist = await userExistCheck(username, email, phoneNumber)
+    if (userExist) throw userExist
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const newSiteMedic = new User({
+        role: SITE_MEDIC_ROLE, username, name, lastname,
+        password: hashedPassword, email, phoneNumber, avatarName,
+    })
+
+    try {
+        await newSiteMedic.save()
+        res.json({ message: `"${username}" :${successMsgs.successSiteMedic}` })
     } catch {
         res.status(500).json({ message: errorMsgs.userRegisterError })
     }
@@ -60,12 +114,13 @@ exports.gymAdminRegister = async (req, res) => {
 
 exports.gymRegister = async (req, res) => {
     const admin = await User.findById(req.user.id)
+    const { name, city, address, capacity, phoneNumber, holidays } = req.body
     const gymImageNames = req.files != null ? req.files.map(file => file.filename) : null
-    const { name, city, address, capacity, phoneNumber } = req.body
 
+    if (holidays.length > 7) throw errorMsgs.holidaysLengthReached
     const formError = await gymFormCheck(name, city, address, phoneNumber, capacity)
     if (formError) throw formError
-    const newGym = new Gym({ name, city, address, capacity, phoneNumber, gymImageNames, admin: admin.id })
+    const newGym = new Gym({ name, city, address, capacity, holidays, phoneNumber, gymImageNames, admin: admin.id })
 
     try {
         await newGym.save()
@@ -140,7 +195,7 @@ exports.athleteRegister = async (req, res) => {
     const loggedUser = await User.findById(req.user.id)
     const gym = await Gym.findById(loggedUser.gym)
     const avatarName = req.file != null ? req.file.filename : ''
-    const { username, name, lastname, email, password, phoneNumber } = req.body
+    const { username, name, lastname, email, password, phoneNumber, sessionNumbers } = req.body
 
     const formError = formCheck(username, name, lastname, email, password, phoneNumber)
     if (formError) throw formError
@@ -150,8 +205,8 @@ exports.athleteRegister = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10)
     const newAthlete = new User({
-        username, name, lastname, email, phoneNumber, avatarName,
-        password: hashedPassword, gym: gym.id, role: ATHLETE_ROLE
+        name, lastname, email, phoneNumber, avatarName, password: hashedPassword,
+        username, gym: gym.id, sessionsRemaining: sessionNumbers, role: ATHLETE_ROLE,
     })
 
     try {

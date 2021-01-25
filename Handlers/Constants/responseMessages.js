@@ -11,6 +11,7 @@ exports.authController = {
         doubleRequestError: 'درخواست متوالی قابل قبول نیست',
         unverifiedEmail: 'ایمیل وارد شده هنوز تایید نشده است',
         expiredInfo: 'زمان استفاده از این ژتون یا کد به پایان رسیده است',
+        userIsBanned: 'حساب کاربری شما بسته شده است. نمی توانید وارد حساب خود شوید',
     },
     successMsgs: {
         goodByeMessage: '!خدانگهدار',
@@ -29,16 +30,28 @@ exports.authController = {
 exports.gymController = {
     errorMsgs: {
         gymNotFound: 'باشگاهی یافت نشد',
+        banGymError: 'خطا در بستن باشگاه',
         noPicUploaded: 'تصویری دریافت نشد',
-        gymUpdateError: 'خطا در بروزرسانی مشخصات باشگاه',
+        unBanGymError: 'خطا در باز کردن باشگاه',
+        gymAlreadyBanned: 'باشگاه در حال حاضر بسته است',
+        gymAlreadyUnBanned: 'باشگاه در حال حاضر باز است',
         accessNotAllowed: 'شما به این بخش دسترسی ندارید',
+        gymUpdateError: 'خطا در بروزرسانی مشخصات باشگاه',
         deleteGymAccountError: 'خطا در حذف کردن حساب باشگاه',
+        gymAccessNotAllowed: 'شما به این باشگاه دسترسی ندارید',
         gymPicLimitReached: 'درج تصویر به حداکثر تعداد رسیده است',
+        setAccessTokenError: 'خطا در بروزرسانی ژتون ورودی باشگاه',
+        gymHolidaysUpdateError: 'خطا در بروزرسانی روز های تعطیل باشگاه',
+        holidaysLengthReached: 'تعداد روز های تعطیل نمی تواند بیشتر از هفت باشد',
     },
     successMsgs: {
+        banGymSuccess: 'باشگاه مورد نظر بسته شد',
+        unBanGymSuccess: 'باشگاه مورد نظر باز شد',
         gymInfoUpdated: 'اطلاعات باشگاه بروز گردید',
         gymPicsUpdated: 'تصاویر باشگاه بروز گردید',
         deleteGymAccountSuccess: 'حساب باشگاه با موفقیت حذف گردید',
+        setAccessTokenSuccess: 'ژتون ورودی باشگاه با موفقیت بروز گردید',
+        gymHolidaysUpdateSuccess: 'روز های تعطیل باشگاه با موفقیت بروز گردید',
     }
 }
 
@@ -49,15 +62,24 @@ exports.communicationController = {
         sendMessageError: 'خطا در ارسال پیام',
         editMessageError: 'خطا در ویرایش پیام',
         userNotFound: 'کاربری با این مشخصات یافت نشد',
+        messageNotFound: 'پیامی با این مشخصات یافت نشد',
         noFileOrTextFound: 'متن یا فایلی برای ارسال دریافت نشد',
         deleteMessageNotAllowed: 'شما قادر به حذف این پیام نیستید',
         editMessageNotAllowed: 'شما قادر به ویرایش این پیام نیستید',
+        markAsReadError: 'خطا در علامت زدن پیام به عنوان خوانده شده',
+        messageAlreadyMarkedAsRead: 'پیام در حال حاضر خوانده شده است',
+        unMarkAsReadError: 'خطا در علامت زدن پیام به عنوان خوانده نشده',
         userInfoAccessNotAllowed: 'شما نمی توانید به اطلاعات این کاربر دسترسی داشته باشید',
+        markMessageNotAllowed: 'شما نمی توانید این پیام را به عنوان خوانده شده علامت بزنید',
+        unMarkMessageNotAllowed: 'شما نمی توانید این پیام را به عنوان خوانده نشده علامت بزنید',
+        messageAlreadyUnMarkedAsRead: 'پیام در حال حاضر به عنوان خوانده نشده علامت زده شده است',
     },
     successMsgs: {
         deleteMessageSuccess: 'پیام شما حذف گردید',
         editMessageSuccess: 'پیام شما ویرایش گردید',
         sendMessageSuccess: 'پیام با موفقیت ارسال شد',
+        messageMarkedAsRead: 'پیام به عنوان خوانده شده علامت زده شد',
+        messageUnMarkedAsRead: 'پیام به عنوان خوانده نشده علامت زده شد',
     },
     warnMsgs: {
         youDoNotHaveAnyGyms: 'شما باشگاهی برای دسترسی به کاربری در آن ندارید',
@@ -70,6 +92,7 @@ exports.registrationController = {
         gymRegisterError: 'خطا در ایجاد حساب باشگاه جدید',
         gymIdNeeded: 'باشگاه مشخص برای ایجاد حساب کاربر نیاز است',
         wrongAdminPassword: 'رمز تایید برای ثبت حساب مدیر سایت اشتباه است',
+        holidaysLengthReached: 'تعداد روز های تعطیل نمی تواند بیشتر از هفت باشد',
     },
     successMsgs: {
         successSiteAdmin: 'مدیر جدید سایت ثبت شد',
@@ -77,7 +100,9 @@ exports.registrationController = {
         successGymCoach: 'مربی جدید باشگاه ثبت شد',
         successGymAccount: 'حساب باشگاه جدید ثبت شد',
         successGymManager: 'منیجر جدید باشگاه ثبت شد',
+        successSiteMedic: 'پزشک جدید برای سایت ثبت شد',
         successGymAthlete: 'ورزشکار جدید باشگاه ثبت شد',
+        successSiteSupport: 'پشتیبان جدید برای سایت ثبت شد',
     }
 }
 
@@ -110,22 +135,35 @@ exports.userController = {
         emailChangeError: 'خطا در تغییر ایمیل',
         deleteAvatarError: 'خطا در حذف آواتار',
         changeAvatarError: 'خطا در تغییر آواتار',
+        markSessionError: 'خطا در عملیات حاضری زدن',
         changePasswordError: 'خطا در تغییر رمز عبور',
         userNotFound: 'کاربری با این مشخصات یافت نشد',
+        banUserError: 'خطا در بستن حساب کاربر مورد نظر',
+        athleteNotFound: 'ورزشکاری با این مشخصات یافت نشد',
+        editSessionError: 'خطا در ویرایش تعداد جلسات ورزشکار',
+        unBanUserError: 'خطا در باز کردن حساب کاربر مورد نظر',
         deleteGymStaffError: 'خطا در حذف حساب کاربر مورد نظر',
         updateCredentialsError: 'خطا در بروزرسانی اطلاعات حساب',
+        sessionNumberInvalid: 'تعداد جلسات باید بزرگ تر از صفر باشد',
+        userAlreadyBanned: 'حساب کاربر مورد نظر در حال حاضر بسته می باشد',
         emailCannotBeChanged: 'ایمیل بعد از تایید شدن نمی تواند تغییر کند',
         currentPassIncorrect: 'رمز عبور فعلی خود را اشتباه وارد نموده اید',
         changePasswordEmailSendError: 'خطا در فرستادن ایمیل تغییر رمز عبور',
+        userAlreadyNotBanned: 'حساب کاربر مورد نظر در حال حاضر باز می باشد',
         changePasswordTimeExpired: 'زمان تغییر رمز عبور شما به پایان رسیده است',
+        athleteDoNotHaveRemainingSessions: 'تعداد جلسات ورزشکار مورد نظر به اتمام رسیده',
         userInfoAccessNotAllowed: 'شما نمی توانید به اطلاعات این کاربر دسترسی داشته باشید',
     },
     successMsgs: {
         emailChanged: 'ایمیل شما تغییر یافت',
         changeAvatarSuccess: 'آواتار شما بروز گردید',
         deleteAvatarSuccess: 'آواتار شما با موفقیت حذف گردید',
-        passwordChanged: 'رمز عبور شما با موفقیت تغییر داده شد',
+        editSessionSuccess: 'تعداد جلسات ورزشکار تغییر گردید',
+        markSessionSuccess: 'عملیات حاضری زدن موفقیت امیز بود',
         deleteGymStaffSuccess: 'حساب کاربری مورد نظر حذف گردید',
+        passwordChanged: 'رمز عبور شما با موفقیت تغییر داده شد',
+        banUserSuccess: 'حساب کاربر مورد نظر با موفقیت بسته شد',
+        unBanUserSuccess: 'حساب کاربر مورد نظر با موفقیت باز شد',
         updateCredentialsSuccess: 'اطلاعات حساب کاربری شما بروز گردید',
         changePasswordEmailSent: 'ایمیل تغییر رمز عبور برای شما فرستاده شد',
     },
@@ -168,6 +206,27 @@ exports.handlers = {
         gymPhoneNumberNeeded: 'درج شماره تلفن برای باشگاه نیاز است',
         gymPhoneNumberExist: 'باشگاهی دیگر با همین شماره تلفن وجود دارد',
         gymUsersAccountDeleteError: 'خطا در حذف کردن حساب های کاربران باشگاه',
+    },
+    checkAccesses: {
+        gymNotFound: 'باشگاهی با این مشخصات یافت نشد',
+        gymAccessNotAllowed: 'شما به این باشگاه دسترسی ندارید',
+        userAccessNotAllowed: 'شما به حساب این کاربر دسترسی ندارید',
+        gymsNeeded: 'شما نیاز به باشگاه برای دسترسی به حساب های کاربران آن دارید',
+        gymAccessTokenHasExpired: 'مهلت استفاده از ژتون ورودی این باشگاه به پایان رسیده است',
+        gymIsBanned: 'باشگاه شما بسته شده است. بنابراین قادر به استفاده از امکانات سایت نیستید',
+        gymAdminIsBanned: 'حساب مدیر باشگاه شما بسته شده است. بنابراین قادر به استفاده از امکانات سایت نیستید',
+    },
+    cronJobs: {
+        jwtExpired: 'jwt expired',
+        allUsersMessagesUpdated: 'All Users Messages Updated',
+        gymPaymentWarnSent: 'Gym Payment Warn Sent To GymAdmin',
+        automatedMessagesDeleted: 'All Automated Messages Deleted',
+        gymAccessTokenRemoveError: 'Failed To Remove Gym AccessToken',
+        PayYourAccessTokenWarn: 'لطفا برای پرداخت ژتون اقدام فرمایید',
+        allUsersMessagesUpdateFailed: 'All Users Messages Update Failed',
+        automatedMessagesDeleteFailed: 'Automated Messages Delete Failed',
+        gymPaymentWarnSendingError: 'Cannot Send A Warn Message To GymAdmin',
+        gymAccessTokenRemoved: 'Gym AccessToken And Expire Date Removed And Expired',
     }
 }
 
@@ -180,13 +239,14 @@ exports.authMiddleware = {
 
 exports.checksMiddleware = {
     paramCheckError: 'مشخصات وارد شده نادرست است',
-    gymNotFound: 'باشگاهی با این مشخصات یافت نشد',
     userNotFound: 'کاربری با این مشخصات یافت نشد',
     accessNotAllowed: 'شما به این بخش دسترسی ندارید',
     accountIsVerified: 'حساب کاربری شما درحال حاضر فعال می باشد',
-    gymAccessNotAllowed: 'شما به کاربران این باشگاه دسترسی ندارید',
     emailNeeded: 'برای انجام این کار نیاز به ایمیل برای حساب خود دارید',
-    userDeleteAccessNotAllowed: 'شما نمی توانید حساب این کاربر را حذف کنید',
-    gymsNeeded: 'شما نیاز به باشگاه برای دسترسی به حساب های کاربران آن دارید',
     accountVerifyNeeded: 'برای انجام این کار نیاز به تایید حساب کاربری خود دارید',
+}
+
+exports.communicationsMiddleware = {
+    userNotFound: 'کاربری برای ارسال پیام یافت نشد',
+    sendMessageNotAllowed: 'شما به این بخش دسترسی ندارید',
 }

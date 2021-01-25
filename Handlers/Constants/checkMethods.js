@@ -1,0 +1,8 @@
+module.exports = {
+    BAN: 'BAN',
+    GET: 'GET',
+    DELETE: 'DELETE',
+    FEEDBACK: 'FEEDBACK',
+    SCHEDULES: 'SCHEDULES',
+    COMMUNICATION: 'COMMUNICATION',
+}

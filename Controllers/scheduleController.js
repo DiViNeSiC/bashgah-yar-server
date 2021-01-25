@@ -1,38 +1,29 @@
-const User = require('../Models/User')
 const Schedule = require('../Models/Schedule')
 const SportingMove = require('../Models/SportingMove')
-const { ATHLETE_ROLE } = require('../Handlers/Constants/roles')
 const { scheduleController: { errorMsgs, successMsgs } } = require('../Handlers/Constants/responseMessages')
 
+exports.getAllSportMoves = async (req, res) => {
+    const moves = await SportingMove.find()
+    res.json({ moves })
+}
+
 exports.getAthleteSchedules = async (req, res) => {
-    const { athleteId } = req.params
-    const athlete = await User.findOne({ _id: athleteId, role: ATHLETE_ROLE }).populate('gym').exec()
-    if (!athlete) throw errorMsgs.athleteNotFound
-    const schedules = await Schedule.find({ athlete: athleteId }).populate('movesList').populate('coach').exec()
-    if (!schedules.length) throw errorMsgs.scheduleNotFound
-    
+    const { athlete } = req
+    const schedules = await Schedule.find({ athlete: athlete._id }).populate('movesList').populate('coach').exec()
     res.json({ schedules, athlete })
 }
 
 exports.getScheduleById = async (req, res) => {
-    const { scheduleId } = req.params
-    const schedule = await Schedule.findById(scheduleId)
-        .populate('coach').populate('athlete').populate('movesList').exec()
-        
-    if (!schedule) throw errorMsgs.scheduleNotFound
-    res.json({ schedule })
+    res.json({ schedule: req.schedule })
 }
 
 exports.createNewSchedule = async (req, res) => {
+    const { athlete } = req
     const { movesId } = req.body
-    const { athleteId } = req.params
     if (!movesId.length) throw errorMsgs.movesListIsEmpty
 
-    const athlete = await User.findOne({ _id: athleteId, role: ATHLETE_ROLE })
-    if (!athlete) throw errorMsgs.athleteNotFound
-
     const movesList = movesId.map(move => ({ move, checked: false }))
-    const newSchedule = new Schedule({ athlete: athlete.id, coach: req.user.id, movesList })
+    const newSchedule = new Schedule({ athlete: athlete._id, coach: req.user.id, movesList })
 
     try {
         await newSchedule.save()
@@ -89,11 +80,8 @@ exports.deleteMoveById = async (req, res) => {
 }
 
 exports.deleteScheduleById = async (req, res) => {
-    const { scheduleId } = req.params
-    const schedule = await Schedule.findById(scheduleId)
-    if (!schedule) throw errorMsgs.scheduleNotFound
-
     try {
+        const { schedule } = req
         await schedule.deleteOne()
         res.json({ message: successMsgs.deleteScheduleSuccess })
     } catch (err) {

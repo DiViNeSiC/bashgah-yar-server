@@ -15,6 +15,7 @@ exports.regularLogin = async (req, res) => {
 
     const user = await findUser(credential)
     if (!user) throw errorMsgs.userDidNotFound
+    if (user.isBanned) throw errorMsgs.userIsBanned
     const passed = await bcrypt.compare(password, user.password)
     if (!passed) throw errorMsgs.incorrectPassword
 
@@ -42,6 +43,7 @@ exports.sendTwoStepCode = async (req, res) => {
 
         const payload = await jwt.verify(regularLoginToken, process.env.JWT_REGULAR_SECRET) 
         const user = await User.findById(payload.userId)
+        if (user.isBanned) throw errorMsgs.userIsBanned
 
         const twoStepCode = generateCode()
         const newTimeBasedCode = new TimeBasedCode({ code: twoStepCode })
@@ -65,6 +67,7 @@ exports.confirmTwoStepCodeAndLogin = async (req, res) => {
 
     const user = await User.findOne({ timeBasedCode: timeBasedCode.code })
     if (!user) throw errorMsgs.expiredInfo
+    if (user.isBanned) throw errorMsgs.userIsBanned
 
     const { entryToken, refreshToken, confirmationToken } = await generateToken(user, expiresIn, true)
     await user.updateOne({ entryToken, refreshToken, confirmationToken, timeBasedCode: '' })
@@ -93,6 +96,7 @@ exports.verifyRefreshToken = async (req, res) => {
 exports.sendAccountActivationEmail = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)
+        if (user.isBanned) throw errorMsgs.userIsBanned
         const accountActivationToken = await jwt
             .sign({ userId: user.id }, process.env.JWT_ACC_ACTIVATION_SECRET, { expiresIn: '20m' })
         
@@ -119,6 +123,7 @@ exports.forgotPassWithEmail = async (req, res) => {
     const { email } = req.body
     const user = await User.findOne({ email })
     if (!user) throw errorMsgs.userDidNotFound
+    if (user.isBanned) throw errorMsgs.userIsBanned
     if (!user.verifiedEmail) throw errorMsgs.unverifiedEmail
     
     try {
@@ -137,6 +142,7 @@ exports.forgotPassWithPhoneNumber = async (req, res) => {
     const { phoneNumber } = req.body
     const user = await User.findOne({ phoneNumber })
     if (!user) throw errorMsgs.userDidNotFound
+    if (user.isBanned) throw errorMsgs.userIsBanned
     const existCode = await TimeBasedCode.findOne({ code: user.timeBasedCode })
     if (existCode) throw errorMsgs.doubleRequestError
     
@@ -162,6 +168,7 @@ exports.resetPassWithToken = async (req, res) => {
         const payload = await jwt.verify(forgotPassToken, process.env.JWT_RESET_PASS_SECRET)
         const password = await bcrypt.hash(newPassword, 10)
         await User.findByIdAndUpdate(payload.userId, { password, forgotPassToken: '', confirmationToken: '' })
+        
         res.json({ message: successMsgs.resetPassSuccess })
     } catch (err) {
         if (err.message === errorMsgs.jwtExpired) throw errorMsgs.expiredInfo

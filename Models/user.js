@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    socketId: {
+        type: String,
+        default: ''
+    },
     gym: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Gym'
@@ -50,15 +54,29 @@ const userSchema = new mongoose.Schema({
             ref: 'Gym'
         }
     ],
+    sessionsRemaining: {
+        min: 0,
+        type: Number,
+    },
+    isBanned: {
+        type: Boolean,
+        default: false
+    },
+    notReadMessages: {
+        type: Number,
+        min: 0,
+        default: 0,
+    },
     name: String,
-    lastname: String,
     weight: Number,
     height: Number,
-    bloodType: Number,
+    lastname: String,
     password: String,
-    phoneNumber: String,
+    bloodType: Number,
     avatarName: String,
-    avatarImagePath: String
+    phoneNumber: String,
+    avatarImagePath: String,
+    lastPresentSessionDate: Date,
 }, { timestamps: true })
 
 userSchema.pre('save', function() {
