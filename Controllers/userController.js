@@ -39,8 +39,8 @@ exports.getUserById = async (req, res) => {
 }
 
 exports.markAthletesSession = async (req, res) => {
-    const { userId } = req.params
-    const athlete = await User.findOne({ _id: userId, role: ATHLETE_ROLE })
+    const { athleteId } = req.params
+    const athlete = await User.findOne({ _id: athleteId, role: ATHLETE_ROLE })
     if (!athlete) throw errorMsgs.athleteNotFound
     if (athlete.sessionsRemaining < 1) throw errorMsgs.athleteDoNotHaveRemainingSessions
     const newData = { lastPresentSessionDate: Date.now(), sessionsRemaining: athlete.sessionsRemaining - 1 }
@@ -54,9 +54,9 @@ exports.markAthletesSession = async (req, res) => {
 }
 
 exports.editAthletesSessions = async (req, res) => {
-    const { userId } = req.params
+    const { athleteId } = req.params
     const { newSessionNumber } = req.body
-    const athlete = await User.findOne({ _id: userId, role: ATHLETE_ROLE })
+    const athlete = await User.findOne({ _id: athleteId, role: ATHLETE_ROLE })
     if (!athlete) throw errorMsgs.athleteNotFound
     if (newSessionNumber < 0) throw errorMsgs.sessionNumberInvalid
 

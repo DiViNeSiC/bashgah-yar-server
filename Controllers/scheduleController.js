@@ -7,6 +7,11 @@ exports.getAllSportMoves = async (req, res) => {
     res.json({ moves })
 }
 
+exports.getOneSportMove = async (req, res) => {
+    const move = await SportingMove.findById(req.params.moveId)
+    res.json({ move })
+}
+
 exports.getAthleteSchedules = async (req, res) => {
     const { athlete } = req
     const schedules = await Schedule.find({ athlete: athlete._id }).populate('movesList').populate('coach').exec()
@@ -33,16 +38,17 @@ exports.createNewSchedule = async (req, res) => {
     }
 }
 
-exports.checkCompletedMoves = async (req, res) => {
+exports.changeMoveTaskCompleteSection = async (req, res) => {
     const { scheduleId } = req.params
-    const { completedMovesId } = req.body
+    const { changedMoves } = req.body
+    if (!changedMoves || !changedMoves.length) throw errorMsgs.changedMoveNotFound
     const schedule = await Schedule.findOne({ _id: scheduleId, athlete: req.user.id })
     if (!schedule) throw errorMsgs.scheduleNotFound
 
-    const newMovesList = schedule.movesList.map(({ move }) => {
-        const completedMove = completedMovesId.find(completed => completed === move.toString())
-        if (completedMove) return { move, checked: true }
-        return { move, checked: false }
+    const newMovesList = schedule.movesList.map(moveTask => {
+        const changedMove = changedMoves.map(({ move }) => move.toString() === moveTask.move.toString())
+        if (changedMove) return { move: moveTask.move, checked: changedMove.checked }
+        return { move: moveTask.move, checked: moveTask.checked }
     })
 
     try {

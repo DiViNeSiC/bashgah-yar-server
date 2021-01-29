@@ -85,8 +85,7 @@ exports.verifyRefreshToken = async (req, res) => {
 
         const { entryToken, refreshToken } = await generateToken(user, payload.expiresIn)
         await user.updateOne({ entryToken, refreshToken })
-
-        res.json({ message: successMsgs.updateTokenSuccess, newEntryToken: entryToken, newRefreshToken: refreshToken })
+        res.json({ user, message: successMsgs.updateTokenSuccess, newEntryToken: entryToken, newRefreshToken: refreshToken })
     } catch (err) {
         if (err.message === errorMsgs.jwtExpired) throw errorMsgs.expiredInfo
         res.status(500).json({ message: errorMsgs.serverError })

@@ -15,7 +15,7 @@ router.get('/received', catchErrors(getMessagesForReceiver))
 router.post('/medic',sendMessageCheck(SITE_MEDIC_ROLE), catchErrors(sendMessage))
 router.post('/feedback', sendMessageCheck(SITE_ADMIN_ROLE), catchErrors(sendMessage))
 router.post('/support', sendMessageCheck(SITE_SUPPORT_ROLE), catchErrors(sendMessage))
-router.post('/:userId', checkParamId, checkIsNotHimSelf, sendMessageCheck, checkAccessForCommunication, gymEntryCheck, messageFileUpload.single('avatar'), catchErrors(sendMessage))
+router.post('/:userId', checkParamId, checkIsNotHimSelf, sendMessageCheck, checkAccessForCommunication, gymEntryCheck, messageFileUpload.single('messageFile'), catchErrors(sendMessage))
 
 router.put('/edit/:messageId', checkParamId, gymEntryCheck, catchErrors(editMessage))
 router.put('/mark/read/:messageId', checkParamId, catchErrors(markAsRead))

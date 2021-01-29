@@ -17,7 +17,7 @@ router.get('/', catchErrors(getLoggedUser))
 router.get('/gym-admins', authRole(SITE_ADMIN_ROLE), catchErrors(getAllGymAdmins))
 router.get('/gym-athletes', authRole(GYM_COACH_ROLE), catchErrors(getGymAthletes))
 router.get('/gym-users', authRole(GYM_MANAGER_ROLE), catchErrors(getGymCoachesAndAthletes))
-router.get('/all/:userId', checkParamId, checkIsNotHimSelf, checkUserAccessForGet, catchErrors(getUserById))
+router.get('/users/:userId', checkParamId, checkIsNotHimSelf, checkUserAccessForGet, catchErrors(getUserById))
 
 router.post('/change-password', emailExistCheck, accountVerifiedCheck, catchErrors(sendChangePasswordEmail))
 
